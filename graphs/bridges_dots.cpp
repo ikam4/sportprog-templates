@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #pragma GCC optimize("O3,unroll-loops")
 #include <bits/stdc++.h>
 #include <ext/pb_ds/assoc_container.hpp>
@@ -48,7 +48,7 @@ template<class Fun>
 decltype(auto) y_comb(Fun&& fun) {
     return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
-// y_comb([&](...) -> type {...}) - рекурсия лямбд внутри другой функции
+// y_comb([&](...) -> тип {...}) — рекурсия лямбд внутри другой функции
 
 template<class T>
 inline istream& operator>>(istream& in, vector<T>& a) {
@@ -131,7 +131,7 @@ using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, chash>;
 template<class T>
 using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
                                  __gnu_pbds::tree_order_statistics_node_update>;
-// order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (0-based)
+// order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (нумерация с нуля)
 
 template<typename T, T MOD>
 struct ModInt {
@@ -195,10 +195,10 @@ struct ModInt {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -236,7 +236,7 @@ int main() {
     return 0;
 }
 
-// graph[v] stores (neighbor, edge_id); both directions share one unique nonnegative id.
+// graph[v] хранит (сосед, id ребра); оба направления имеют один уникальный неотрицательный id.
 namespace bridges {
     void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<pii>& bridges) {
         tin[v] = low[v] = timer++;
@@ -287,7 +287,7 @@ namespace dots {
                 ++children;
                 dfs(u, id, tin, low, timer, graph, dot);
                 low[v] = min(low[v], low[u]);
-                if (p != -1 && low[u] >= tin[v]) { // remove for block tree
+                if (p != -1 && low[u] >= tin[v]) { // убрать при построении блок-дерева
                     dot[v] = true;
                 }
                 // if (low[u] >= tin[v]) {
@@ -302,7 +302,7 @@ namespace dots {
                 // }
             }
         }
-        if (p == -1 && children > 1) { // remove for block tree
+        if (p == -1 && children > 1) { // убрать при построении блок-дерева
             dot[v] = true;
         }
     }

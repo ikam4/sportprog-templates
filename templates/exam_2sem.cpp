@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -55,10 +55,10 @@ inline ostream& operator<<(ostream& out, const vector<T>& a) {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -492,7 +492,7 @@ struct DSU {
     }
 };
 
-// graph[v] stores (neighbor, edge_id); both directions share one unique nonnegative id.
+// graph[v] хранит (сосед, id ребра); оба направления имеют один уникальный неотрицательный id.
 namespace bridges {
     void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<pii>& bridges) {
         tin[v] = low[v] = timer++;
@@ -543,7 +543,7 @@ namespace dots {
                 ++children;
                 dfs(u, id, tin, low, timer, graph, dot);
                 low[v] = min(low[v], low[u]);
-                if (p != -1 && low[u] >= tin[v]) { // remove for block tree
+                if (p != -1 && low[u] >= tin[v]) { // убрать при построении блок-дерева
                     dot[v] = true;
                 }
                 // if (low[u] >= tin[v]) {
@@ -558,7 +558,7 @@ namespace dots {
                 // }
             }
         }
-        if (p == -1 && children > 1) { // remove for block tree
+        if (p == -1 && children > 1) { // убрать при построении блок-дерева
             dot[v] = true;
         }
     }
@@ -976,7 +976,7 @@ namespace MST {
     }
 };
 
-// Range addition and range sum, compatible with HLD below.
+// Прибавление и сумма на отрезке; совместимо с HLD ниже.
 class HldSegtree {
     struct node {
         ll val = 0;

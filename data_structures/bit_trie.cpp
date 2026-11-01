@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -41,10 +41,10 @@ inline ostream& operator<<(ostream& out, const vector<T>& a) {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -192,7 +192,7 @@ public:
         return mn;
     }
 
-    // k — 0-based индекс наименьшего элемента
+    // k — индекс наименьшего элемента, нумерация с нуля
     ull kth(int k) const {
         assert(k >= 0 && k < size());
         int u = 0;

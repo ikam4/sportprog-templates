@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'

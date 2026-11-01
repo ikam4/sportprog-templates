@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -258,8 +258,8 @@ vector<T> lcis(const vector<T>& a, const vector<T>& b) {
     }
 
     vector<int> len(sz(b)), prv(sz(b), -1);
-    // Immutable predecessors: later updates must not change old chains.
-    // O(nm) time and up to O(nm) restoration memory.
+    // Предки неизменяемы: последующие обновления не должны менять старые цепочки.
+    // Время O(nm), память для восстановления — до O(nm).
     vector<pair<T, int>> hist;
 
     for (const T& value: a) {

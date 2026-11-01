@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -41,10 +41,10 @@ inline ostream& operator<<(ostream& out, const vector<T>& a) {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -86,7 +86,7 @@ struct BellmanResult {
     vi parent;
     bool cycle;
 
-    // Conservative: restore only when no reachable negative cycle was found.
+    // Восстанавливаем путь только при отсутствии достижимого отрицательного цикла.
     vi get_path(int target) const {
         if (cycle || dp[target] == LINF) return {};
         vi path;
@@ -118,7 +118,7 @@ BellmanResult bellman_ford(int s, int n, span<array<int, 3>> edges) {
     return {std::move(dp), std::move(parent), cycle};
 }
 
-// Original target-and-print interface retained as an example/compatibility overload.
+// Исходный интерфейс с целевой вершиной и печатью сохранён как пример и перегрузка для совместимости.
 void bellman_ford(int s, int target, int n, span<array<int, 3>> edges) {
     auto result = bellman_ford(s, n, edges);
     if (result.cycle) {
@@ -135,8 +135,8 @@ struct FloydResult {
     vector<vi> nxt;
     bool cycle;
 
-    // The old local restoration helper is now accessible to the caller.
-    // With any negative cycle, this helper conservatively returns no path.
+    // Прежняя локальная функция восстановления теперь доступна вызывающему коду.
+    // При наличии любого отрицательного цикла эта функция возвращает пустой путь.
     vi get_path(int u, int v) const {
         if (cycle || dp[u][v] == LINF) return {};
         vi path;
@@ -181,11 +181,11 @@ FloydResult floyd_yorshell(int n, span<vi> matrix) {
     return {std::move(dp), std::move(nxt), cycle};
 }
 
-// The algorithm returns data; the original diagnostic output is kept separately.
+// Алгоритм возвращает данные; исходная диагностическая печать вынесена отдельно.
 void floyd_example(int n, span<vi> matrix) {
     auto result = floyd_yorshell(n, matrix);
     if (result.cycle) cout << "Negative cycle found" << nn;
-    // Otherwise use result.dp and result.get_path(u, v).
+    // Иначе используйте result.dp и result.get_path(u, v).
 }
 
 void solve() {}

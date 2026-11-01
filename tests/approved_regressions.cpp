@@ -2,7 +2,7 @@
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
 
-// Include the actual standalone examples without executing their main functions.
+// Подключаем исходные самостоятельные примеры, не выполняя их функции main.
 #define main example_main
 #pragma GCC push_options
 namespace dsu_example {

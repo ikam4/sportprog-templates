@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -41,10 +41,10 @@ inline ostream& operator<<(ostream& out, const vector<T>& a) {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -97,7 +97,7 @@ void euler(int v, auto& graph, auto& deleted) {
 
 void solve() {
     int n, m; // кол-во вершин и ребер
-    cin >> n >> m; // vertices in the input: 0..n-1
+    cin >> n >> m; // вершины во входных данных: 0..n-1
     vector<vector<pii>> graph(n);
     vector<bool> deleted(m, false);
     vector<int> deg(n);
@@ -150,7 +150,7 @@ void euler2(int v, auto& graph) {
 
 void solve2() { // для ориент
     int n, m; // кол-во вершин и ребер
-    cin >> n >> m; // vertices in the input: 0..n-1
+    cin >> n >> m; // вершины во входных данных: 0..n-1
     vector<vi> graph(n);
     vector<int> in(n), out(n);
     for (int i = 0; i < m; ++i) {

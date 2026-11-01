@@ -9,14 +9,14 @@ void bubble_sort(vector<int>& a) { // стабильна
     for (int i = 0; i < n - 1; ++i) {
         swapped = false;
         for (int j = 0; j < n - i - 1;
-             ++j) { // мы пузырючим макс. элик в конец, поэтому у нас последние i эликов посорчены goddamn
+             ++j) { // мы пузырючим макс. элик в конец, поэтому у нас последние i эликов посорчены
             if (a[j] > a[j + 1]) swap(a[j], a[j + 1]), swapped = true;
         }
         if (!swapped) break;
     }
 }
 
-void selection_sort(vector<int>& a) { // нестабильна, т.к. по сути мы делаем global свапы здесь
+void selection_sort(vector<int>& a) { // нестабильна, т.к. по сути мы делаем обмены между произвольными позициями здесь
     int n = (int) a.size();
     for (int i = 0; i < n - 1; ++i) {
         int min_id = i;

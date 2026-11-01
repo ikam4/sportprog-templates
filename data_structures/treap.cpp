@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #pragma GCC optimize("O3,unroll-loops")
 #include <bits/stdc++.h>
 #include <ext/pb_ds/assoc_container.hpp>
@@ -48,7 +48,7 @@ template<class Fun>
 decltype(auto) y_comb(Fun&& fun) {
     return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
-// y_comb([&](...) -> type {...}) - рекурсия лямбд внутри другой функции
+// y_comb([&](...) -> тип {...}) — рекурсия лямбд внутри другой функции
 
 template<class T>
 inline istream& operator>>(istream& in, vector<T>& a) {

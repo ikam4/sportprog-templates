@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -37,8 +37,8 @@ template<class T> inline ostream& operator<<(ostream& out, const vector<T>& a) {
     return out;
 }
 
-inline int msb(ll x) { return x ? 63 - __builtin_clzll((ull) x) : -1; } // старший 1-бит (0 based)
-inline int lsb(ll x) { return x ? __builtin_ctzll((ull) x) : -1; } // младший 1-бит (0 based)
+inline int msb(ll x) { return x ? 63 - __builtin_clzll((ull) x) : -1; } // старший 1-бит (нумерация с нуля)
+inline int lsb(ll x) { return x ? __builtin_ctzll((ull) x) : -1; } // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
@@ -113,7 +113,7 @@ public:
     }
 
     int extend(char c) {
-        //GSAM
+        // Обобщённый суффиксный автомат (GSAM)
         // if (nodes[last][c] != -1) {
             // int q = nodes[last][c];
             // if (nodes[q].len == nodes[last].len + 1) {
@@ -175,7 +175,7 @@ public:
     void topo_sort() {
         int n = nodes[last].len;
         // int n = 0;
-        // for (const auto& node: nodes) n = max(n, node.len); // compatible with GSAM
+        // for (const auto& node: nodes) n = max(n, node.len); // совместимо с обобщённым суффиксным автоматом
         vi cnt_len(n + 1, 0);
         for (const auto& i: nodes) {
             cnt_len[i.len]++;

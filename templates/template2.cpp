@@ -1,4 +1,4 @@
-// BEST TEMPLATE EVER
+// Лучший шаблон
 #pragma GCC optimize("O3,unroll-loops")
 #pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
 #include <bits/stdc++.h>
@@ -31,24 +31,6 @@ using vi = vector<int>;
 using vstr = vector<string>;
 using vll = vector<ll>;
 using i128 = __int128_t;
-
-template<class Fun>
-class y_combinator_result {
-    Fun fun_;
-
-public:
-    template<class T>
-    explicit y_combinator_result(T&& fun) : fun_(std::forward<T>(fun)) {}
-    template<class... Args>
-    decltype(auto) operator()(Args&&... args) {
-        return fun_(std::ref(*this), std::forward<Args>(args)...);
-    }
-};
-template<class Fun>
-decltype(auto) y_comb(Fun&& fun) {
-    return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
-}
-// y_comb([&](...) -> type {...}) - рекурсия лямбд внутри другой функции
 
 template<class T>
 inline istream& operator>>(istream& in, vector<T>& a) {
@@ -133,7 +115,7 @@ using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, chash>;
 template<class T>
 using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
                                  __gnu_pbds::tree_order_statistics_node_update>;
-// order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (0-based)
+// order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (нумерация с нуля)
 
 template<typename T, T MOD>
 struct ModInt {
@@ -196,10 +178,10 @@ struct ModInt {
 
 inline int msb(ll x) {
     return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (0 based)
+} // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) {
     return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (0 based)
+} // младший 1-бит (нумерация с нуля)
 
 const int MOD = 1e9 + 7;
 const int INF = 0x3f3f3f3f;
