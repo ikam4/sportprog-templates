@@ -97,7 +97,7 @@ struct DSU {
         if (u == parent[u]) return u;
         return parent[u] = find_set(parent[u]);
     }
-    bool union_sets(int a, int b) {
+    bool unite(int a, int b) {
         a = find_set(a);
         b = find_set(b);
         if (a != b) {
@@ -119,7 +119,7 @@ ll kruskal(int n, span<array<int, 3>> edges) {
     ll total = 0;
     ranges::sort(edges, [](const array<int, 3>& lhs, const array<int, 3>& rhs) { return lhs[2] < rhs[2]; });
     for (auto [u, v, w]: edges) {
-        if (dsu.union_sets(u, v)) {
+        if (dsu.unite(u, v)) {
             total += w;
             comps--;
             // mst_edges.eb(u, v);
@@ -221,7 +221,7 @@ ll boruvka(int n, span<array<int, 3>> edges) {
         for (int i = 0; i < n; ++i) {
             if (min_edge[i] != -1) {
                 auto [u, v, w] = edges[min_edge[i]];
-                if (dsu.union_sets(u, v)) {
+                if (dsu.unite(u, v)) {
                     total += w;
                     // mst_edges.pb(edges[min_edge[i]]);
                     --comps;

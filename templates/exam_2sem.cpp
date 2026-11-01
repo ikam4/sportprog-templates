@@ -748,105 +748,83 @@ namespace euler {
 };
 
 struct LCA {
-    int LOG;
-    vector<vi> up;
-    vi depth;
-
-    LCA(int root, span<vi> graph) { solve(root, graph); }
-    void dfs(int v, int p, span<vi> graph, vector<vi>& up, vi& depth) {
-        up[v][0] = (p == -1 ? v : p);
-        for (int i = 1; i < LOG; ++i) {
-            up[v][i] = up[up[v][i - 1]][i - 1];
-        }
-        for (int u: graph[v]) {
-            if (u != p) {
-                depth[u] = depth[v] + 1;
-                dfs(u, v, graph, up, depth);
-            }
-        }
+  int LOG;
+  vector<vi> up; vi depth;
+  LCA(int root, span<vi> graph) {
+    LOG = max(1, (int) bit_width((unsigned) sz(graph)));
+    up.assign(sz(graph), vi(LOG)); depth.resize(sz(graph));
+    dfs(root, -1, graph, up, depth);
+  }
+  void dfs(int v, int p, span<vi> graph, vector<vi>& up, vi& depth) {
+    up[v][0] = (p == -1 ? v : p);
+    for (int i = 1; i < LOG; ++i) { up[v][i] = up[up[v][i - 1]][i - 1]; }
+    each(u, graph[v]) {
+      if (u != p) {
+        depth[u] = depth[v] + 1;
+        dfs(u, v, graph, up, depth);
+      }
     }
-
-    int get_lca(int u, int v, const vi& depth, const vector<vi>& up) {
-        if (depth[u] < depth[v]) swap(u, v);
-        int diff = depth[u] - depth[v];
-        for (int i = 0; i < LOG; ++i) {
-            if ((diff >> i) & 1) {
-                u = up[u][i];
-            }
-        }
-        if (u == v) return u;
-        for (int i = LOG - 1; i >= 0; --i) {
-            if (up[u][i] != up[v][i]) {
-                u = up[u][i];
-                v = up[v][i];
-            }
-        }
-        return up[u][0];
+  }
+  int get_lca(int u, int v, const vi& depth, const vector<vi>& up) {
+    if (depth[u] < depth[v]) swap(u, v);
+    int diff = depth[u] - depth[v];
+    for (int i = 0; i < LOG; ++i) {
+      if ((diff >> i) & 1) { u = up[u][i]; }
     }
-
-    void solve(int root, span<vi> graph) {
-        LOG = max(1, (int) bit_width((unsigned) graph.size()));
-        up.assign(graph.size(), vi(LOG));
-        depth.assign(graph.size(), 0);
-        if (!graph.empty()) dfs(root, -1, graph, up, depth);
+    if (u == v) return u;
+    for (int i = LOG - 1; i >= 0; --i) {
+      if (up[u][i] != up[v][i]) {
+        u = up[u][i];
+        v = up[v][i];
+      }
     }
-
-    int query(int u, int v) { return get_lca(u, v, depth, up); }
+    return up[u][0];
+  }
+  int query(int u, int v) { return get_lca(u, v, depth, up); }
 };
 
 struct fast_LCA {
-    vi ord, euler_ord, first, depth;
-    vector<vi> st;
-
-    fast_LCA(int root, span<vi> graph) { solve(root, graph); }
-
-    void dfs(int v, int p, vi& ord, span<vi> graph, vi& depth, vi& euler_ord, vi& first) {
+  vi ord, euler_ord, first, depth;
+  vector<vi> st;
+  void dfs(int v, int p, vi& ord, span<vi> graph, vi& depth, vi& euler_ord, vi& first) {
+    ord.pb(v);
+    euler_ord.pb(depth[v]);
+    if (first[v] == -1) first[v] = sz(euler_ord) - 1;
+    each(u, graph[v]) {
+      if (u != p) {
+        depth[u] = depth[v] + 1;
+        dfs(u, v, ord, graph, depth, euler_ord, first);
         ord.pb(v);
         euler_ord.pb(depth[v]);
-        if (first[v] == -1) first[v] = sz(euler_ord) - 1;
-        for (int u: graph[v]) {
-            if (u != p) {
-                depth[u] = depth[v] + 1;
-                dfs(u, v, ord, graph, depth, euler_ord, first);
-                ord.pb(v);
-                euler_ord.pb(depth[v]);
-            }
-        }
+      }
     }
-
-    int get_lca(int u, int v, span<vi> st, const vi& first, const vi& euler_ord, const vi& ord) {
-        int l = first[u], r = first[v];
-        if (l > r) swap(l, r);
-        int i = 31 - __builtin_clz(r - l + 1);
-        int idx1 = st[i][l];
-        int idx2 = st[i][r - (1 << i) + 1];
-        int min_idx = (euler_ord[idx1] < euler_ord[idx2]) ? idx1 : idx2;
-        return ord[min_idx];
+  }
+  int get_lca(int u, int v, span<vi> st, const vi& first, const vi& euler_ord, const vi& ord) {
+    int l = first[u], r = first[v];
+    if (l > r) swap(l, r);
+    int i = 31 - __builtin_clz(r - l + 1);
+    int idx1 = st[i][l];
+    int idx2 = st[i][r - (1 << i) + 1];
+    int min_idx = (euler_ord[idx1] < euler_ord[idx2]) ? idx1 : idx2;
+    return ord[min_idx];
+  }
+  fast_LCA(int root, span<vi> graph) : first(sz(graph), -1), depth(sz(graph)) {
+    dfs(root, -1, ord, graph, depth, euler_ord, first);
+    int LOG = 32 - __builtin_clz(sz(ord));
+    st.assign(LOG, vi(sz(ord)));
+    for (int i = 0; i < sz(ord); ++i) {
+      st[0][i] = i;
     }
-
-    void solve(int root, span<vi> graph) {
-        ord.clear();
-        euler_ord.clear();
-        first.assign(graph.size(), -1);
-        depth.assign(graph.size(), 0);
-        if (graph.empty()) { st.clear(); return; }
-        dfs(root, -1, ord, graph, depth, euler_ord, first);
-        int LOG = 32 - __builtin_clz(sz(ord));
-        st.assign(LOG, vi(sz(ord)));
-        for (int i = 0; i < sz(ord); ++i) {
-            st[0][i] = i;
-        }
-        for (int i = 1; i < LOG; ++i) {
-            for (int j = 0; j + (1 << i) <= sz(ord); ++j) {
-                int idx1 = st[i - 1][j], idx2 = st[i - 1][j + (1 << (i - 1))];
-                st[i][j] = (euler_ord[idx1] < euler_ord[idx2] ? idx1 : idx2);
-            }
-        }
+    for (int i = 1; i < LOG; ++i) {
+      for (int j = 0; j + (1 << i) <= sz(ord); ++j) {
+        int idx1 = st[i - 1][j], idx2 = st[i - 1][j + (1 << (i - 1))];
+        st[i][j] = (euler_ord[idx1] < euler_ord[idx2] ? idx1 : idx2);
+      }
     }
-
-    int query(int u, int v) {
-        return get_lca(u, v, st, first, euler_ord, ord);
-    }
+  }
+  int query(int u, int v) {
+    return get_lca(u, v, st, first, euler_ord, ord);
+  }
 };
 
 namespace shortest_path_neg {

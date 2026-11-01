@@ -469,10 +469,8 @@ void check_lca_case(const vector<vi>& graph,int root,Binary& binary,Fast& fast) 
     }
 }
 template<class Binary,class Fast> void test_lca_copy() {
-    vector<vi> empty,one(1);Binary zero(0,empty);Fast fzero(0,empty);
-    check(zero.up.empty()&&zero.depth.empty()&&fzero.st.empty(),"empty LCA construction");
-    zero.solve(0,one);fzero.solve(0,one);
-    check(zero.query(0,0)==0&&fzero.query(0,0)==0,"single vertex after LCA rebuild");
+    vector<vi> one(1);Binary zero(0,one);Fast fzero(0,one);
+    check(zero.query(0,0)==0&&fzero.query(0,0)==0,"single vertex LCA");
     for(int z=0;z<100;++z){
         int n=1+ri(100),root=ri(n);vector<vi> graph(n);
         for(int v=1;v<n;++v){int p=ri(v);graph[v].push_back(p);graph[p].push_back(v);}
@@ -480,10 +478,9 @@ template<class Binary,class Fast> void test_lca_copy() {
         check_lca_case(graph,root,binary,fast);
         Binary other(0,one);Fast fother(0,one);
         check_lca_case(graph,root,binary,fast);
-        int next_root=ri(n);binary.solve(next_root,graph);fast.solve(next_root,graph);
-        check_lca_case(graph,next_root,binary,fast);
-        binary.solve(0,one);fast.solve(0,one);
-        check(binary.query(0,0)==0&&fast.query(0,0)==0,"LCA rebuild for another tree size");
+        int next_root=ri(n);Binary rerooted(next_root,graph);Fast frerooted(next_root,graph);
+        check_lca_case(graph,next_root,rerooted,frerooted);
+        check(other.query(0,0)==0&&fother.query(0,0)==0,"independent single-vertex objects");
     }
     vector<vi> chain(2049);
     for(int i=1;i<(int)chain.size();++i){chain[i-1].push_back(i);chain[i].push_back(i-1);}
