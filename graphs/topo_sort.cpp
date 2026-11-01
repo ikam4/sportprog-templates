@@ -31,25 +31,6 @@ using vstr = vector<string>;
 using vll = vector<ll>;
 using i128 = __int128_t;
 
-template<class Fun>
-class y_combinator_result {
-    Fun fun_;
-
-public:
-    template<class T>
-    explicit y_combinator_result(T&& fun)
-        : fun_(std::forward<T>(fun)) {}
-    template<class... Args>
-    decltype(auto) operator()(Args&&... args) {
-        return fun_(std::ref(*this), std::forward<Args>(args)...);
-    }
-};
-template<class Fun>
-decltype(auto) y_comb(Fun&& fun) {
-    return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
-}
-// y_comb([&](...) -> тип {...}) — рекурсия лямбд внутри другой функции
-
 template<class T>
 inline istream& operator>>(istream& in, vector<T>& a) {
     for (auto& x: a) in >> x;
