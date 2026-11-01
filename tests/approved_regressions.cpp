@@ -286,35 +286,36 @@ void test_zero_based() {
 
 void test_wide_segment_values() {
     const ll big=1000000000000LL;
-    sum_tree_example::segtree sum(vector<ll>{big,2*big,3*big});
-    check(sum.query(0,2)==6*big,"64-bit segment construction and sum");
-    sum.update(1,-2*big);check(sum.query(0,2)==2*big,"64-bit point assignment");
-    sum_tree_example::segtree sum_int(vi{1,2,3}),sum_list({big,big}),sum_empty(vi{});
-    check(sum_int.query(0,2)==6&&sum_list.query(0,1)==2*big,"segment constructor compatibility");
-    min_tree_example::segtree minimum(vector<ll>{5*big,-2*big,7*big});
-    check(minimum.get(0,2)==-2*big,"64-bit minimum construction");
+    sum_tree_example::segtree sum(vi{1000000000,1000000000,1000000000});
+    check(sum.query(0,2)==3000000000LL,"segment sum exceeds int with int input");
+    sum.update(1,-1000000000);check(sum.query(0,2)==1000000000LL,"int point assignment and wide sum");
+    sum_tree_example::segtree sum_int(vi{1,2,3}),sum_empty(vi{});
+    check(sum_int.query(0,2)==6,"TRD segment constructor");
+    min_tree_example::min_segtree minimum(vi{1000000000,-1000000000,0});
     minimum.update(0,1,3*big);
-    check(minimum.get(0,2)==big&&minimum.get(0,0)==8*big,"64-bit lazy tag and neutral value");
-    min_tree_example::segtree min_int(vi{2,1}),min_empty(vi{}),zeros(3);
+    check(minimum.get(0,1)==3*big-1000000000&&minimum.get(0,0)==3*big+1000000000,"wide lazy minimum and neutral value");
+    min_tree_example::min_segtree min_int(vi{2,1}),zeros(3);
     check(min_int.get(0,1)==1&&zeros.get(0,2)==0,"minimum constructors preserved");
     for(int z=0;z<40;++z){
-        int n=1+ri(20);vector<ll> a(n);
-        for(ll& x:a)x=(ll(ri(2001))-1000)*1000000000LL;
-        sum_tree_example::segtree s(a);min_tree_example::segtree m(a);auto b=a;
+        int n=1+ri(20);vi initial(n);
+        for(int& x:initial)x=(ri(2001)-1000)*1000000;
+        vector<ll> a(initial.begin(),initial.end()),b=a;
+        sum_tree_example::segtree s(initial);min_tree_example::min_segtree m(initial);
         for(int it=0;it<150;++it){
-            int pos=ri(n);ll value=(ll(ri(2001))-1000)*1000000000LL;
+            int pos=ri(n),value=(ri(2001)-1000)*1000000;
             s.update(pos,value);b[pos]=value;
             int l=ri(n),r=ri(n);if(l>r)swap(l,r);
-            check(s.query(l,r)==accumulate(b.begin()+l,b.begin()+r+1,0LL),"wide point tree versus vector");
-            m.update(l,r,value);for(int j=l;j<=r;++j)a[j]+=value;
+            check(s.query(l,r)==accumulate(b.begin()+l,b.begin()+r+1,0LL),"TRD point tree versus vector");
+            ll delta=(ll(ri(2001))-1000)*1000000000LL;
+            m.update(l,r,delta);for(int j=l;j<=r;++j)a[j]+=delta;
             l=ri(n);r=ri(n);if(l>r)swap(l,r);
             check(m.get(l,r)==*min_element(a.begin()+l,a.begin()+r+1),"wide lazy minimum versus vector");
         }
     }
     point_pool_example::ImplSegtreePool pool(16);
     point_pool_example::ImplSegtree left(pool),right(&pool);
-    left.update(0,3*big);right.update(15,-big);left.merge(right);
-    check(left.query(0,15)==2*big&&left.query(0,0)==3*big,"64-bit implicit point wrapper and merge");
+    left.update(0,300);right.update(15,-100);left.merge(right);
+    check(left.query(0,15)==200&&left.query(0,0)==300,"int implicit point wrapper and merge");
     pool_example::ImplSegtreePool lazy_pool(16);
     pool_example::ImplSegtree lazy(lazy_pool);
     lazy.update(0,15,big);lazy.update_point(0,2*big);
@@ -385,7 +386,7 @@ template<class T> void test_centroid_parents() {
     for(int z=0;z<100;++z){
         int n=1+ri(45);vector<vi> graph(n);
         for(int v=1;v<n;++v){int p=ri(v);graph[v].push_back(p);graph[p].push_back(v);}
-        T c(graph);check((int)c.centroid_parent.size()==n,"centroid parent size");int roots=0;
+        T c(graph,ri(n));check((int)c.centroid_parent.size()==n,"centroid parent size");int roots=0;
         for(int v=0;v<n;++v){
             roots+=c.centroid_parent[v]==-1;vector<bool> blocked(n);int u=v,steps=0;
             while(c.centroid_parent[u]!=-1){

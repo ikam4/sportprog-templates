@@ -74,76 +74,65 @@ int main() {
 }
 
 class ImplSegtreePool {
-    struct Node {
-        int l = 0, r = 0;
-        ll cnt = 0;
-    };
-
-    int max_n = 0, tr_sz = 0;
-    vector<Node> tr;
-
-    int create_node() {
-        tr.eb();
-        return tr_sz++;
-    }
-
+  struct Node {
+    int l = 0, r = 0;
+    int cnt = 0;
+  };
+  int max_n = 0, tr_sz = 0;
+  vector<Node> tr;
+  int create_node() {
+    tr.eb();
+    return tr_sz++;
+  }
 public:
-    ImplSegtreePool(int max_n_, int max_nodes = 0)
-        : max_n(max_n_) {
-        tr.reserve(max_nodes);
-        tr_sz++;
-        tr.eb();
-    }
-
-    int update(int v, int pos, ll val) { return update(v, 0, max_n, pos, val); }
-
-    int merge(int u, int v) { return merge(u, v, 0, max_n); }
-
-    ll query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
-
+  ImplSegtreePool(int max_n_, int max_nodes = 0)
+    : max_n(max_n_) {
+    tr.reserve(max_nodes);
+    tr_sz++;
+    tr.eb();
+  }
+  int update(int v, int pos, int val) { return update(v, 0, max_n, pos, val); }
+  int merge(int u, int v) { return merge(u, v, 0, max_n); }
+  int query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
 private:
-    int update(int v, int cl, int cr, int pos, ll val) {
-        if (!v) v = create_node();
-        if (cl + 1 == cr) {
-            tr[v].cnt += val;
-            return v;
-        }
-        int mid = cl + (cr - cl) / 2;
-        if (pos < mid) {
-            int to_l = update(tr[v].l, cl, mid, pos, val);
-            tr[v].l = to_l;
-        } else {
-            int to_r = update(tr[v].r, mid, cr, pos, val);
-            tr[v].r = to_r;
-        }
-        tr[v].cnt = tr[tr[v].l].cnt + tr[tr[v].r].cnt;
-        return v;
+  int update(int v, int cl, int cr, int pos, int val) {
+    if (!v) v = create_node();
+    if (cl + 1 == cr) {
+      tr[v].cnt += val;
+      return v;
     }
-
-    int merge(int u, int v, int cl, int cr) {
-        if (!u || !v) return u ? u : v;
-        int nw = create_node();
-        if (cl + 1 == cr) {
-            tr[nw].cnt = tr[u].cnt + tr[v].cnt;
-            return nw;
-        }
-        int mid = cl + (cr - cl) / 2;
-        int to_l = merge(tr[u].l, tr[v].l, cl, mid);
-        int to_r = merge(tr[u].r, tr[v].r, mid, cr);
-        tr[nw].l = to_l;
-        tr[nw].r = to_r;
-        tr[nw].cnt = tr[tr[nw].l].cnt + tr[tr[nw].r].cnt;
-        return nw;
+    int mid = cl + (cr - cl) / 2;
+    if (pos < mid) {
+      int to_l = update(tr[v].l, cl, mid, pos, val);
+      tr[v].l = to_l;
+    } else {
+      int to_r = update(tr[v].r, mid, cr, pos, val);
+      tr[v].r = to_r;
     }
-
-    ll query(int v, int cl, int cr, int l, int r) const {
-        if (!v || cl >= r || cr <= l) return 0;
-        if (cl >= l && cr <= r) {
-            return tr[v].cnt;
-        }
-        int mid = cl + (cr - cl) / 2;
-        return query(tr[v].l, cl, mid, l, r) + query(tr[v].r, mid, cr, l, r);
+    tr[v].cnt = tr[tr[v].l].cnt + tr[tr[v].r].cnt;
+    return v;
+  }
+  int merge(int u, int v, int cl, int cr) {
+    if (!u || !v) return u ? u : v;
+    int nw = create_node();
+    if (cl + 1 == cr) {
+      tr[nw].cnt = tr[u].cnt + tr[v].cnt;
+      return nw;
     }
+    int mid = cl + (cr - cl) / 2;
+    int to_l = merge(tr[u].l, tr[v].l, cl, mid);
+    int to_r = merge(tr[u].r, tr[v].r, mid, cr);
+    tr[nw].l = to_l;
+    tr[nw].r = to_r;
+    tr[nw].cnt = tr[tr[nw].l].cnt + tr[tr[nw].r].cnt;
+    return nw;
+  }
+  int query(int v, int cl, int cr, int l, int r) const {
+    if (!v || cl >= r || cr <= l) return 0;
+    if (cl >= l && cr <= r) { return tr[v].cnt; }
+    int mid = cl + (cr - cl) / 2;
+    return query(tr[v].l, cl, mid, l, r) + query(tr[v].r, mid, cr, l, r);
+  }
 };
 
 struct ImplSegtree {
@@ -158,11 +147,11 @@ struct ImplSegtree {
         : root(r)
         , seg_pool(&pool) {}
 
-    void update(int pos, ll val = 1) {
+    void update(int pos, int val = 1) {
         if (seg_pool) root = seg_pool->update(root, pos, val);
     }
 
-    ll query(int l, int r) const { return seg_pool ? seg_pool->query(root, l, r) : 0; }
+    int query(int l, int r) const { return seg_pool ? seg_pool->query(root, l, r) : 0; }
 
     void merge(const ImplSegtree& other) {
         if (seg_pool && other.seg_pool) {

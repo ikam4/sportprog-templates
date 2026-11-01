@@ -154,66 +154,57 @@ private:
 };
 
 // попроще: прибавление на отрезке и минимум
-class segtree {
-    struct node {
-        ll val = 0;
-        ll promise = 0;
-    };
-    int n;
-    vector<node> tree;
-
+class min_segtree {
+  struct node {
+    ll val = 0;
+    ll promise = 0;
+  };
+  int n;
+  vector<node> tree;
 public:
-    segtree(int k) : n(k), tree(4 * n) {}
-    template<typename T = ll>
-    segtree(const vector<T>& arr) : n(sz(arr)), tree(4 * n) {
-        if (n) build(0, 0, n, arr);
-    }
-    void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
-    ll get(int l, int r) { return get(0, 0, n, l, r + 1); }
-
+  min_segtree(int k) : n(k), tree(4 * n) {}
+  min_segtree(const vi& arr) : n(sz(arr)), tree(4 * n) { build(0, 0, n, arr); }
+  void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
+  ll get(int l, int r) { return get(0, 0, n, l, r + 1); }
 private:
-    template<typename T>
-    void build(int idx, int cl, int cr, const vector<T>& arr) {
-        if (cl + 1 == cr) {
-            tree[idx].val = arr[cl];
-            return;
-        }
-        int mid = (cl + cr) / 2;
-        build(idx * 2 + 1, cl, mid, arr);
-        build(idx * 2 + 2, mid, cr, arr);
-        tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
+  void build(int idx, int cl, int cr, const vi& arr) {
+    if (cl + 1 == cr) {
+      tree[idx].val = arr[cl];
+      return;
     }
-
-    void push(int idx) {
-        if (tree[idx].promise == 0) return;
-        tree[2 * idx + 1].promise += tree[idx].promise;
-        tree[2 * idx + 1].val += tree[idx].promise;
-        tree[2 * idx + 2].promise += tree[idx].promise;
-        tree[2 * idx + 2].val += tree[idx].promise;
-        tree[idx].promise = 0;
+    int mid = (cl + cr) / 2;
+    build(idx * 2 + 1, cl, mid, arr);
+    build(idx * 2 + 2, mid, cr, arr);
+    tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
+  }
+  void push(int idx) {
+    if (tree[idx].promise == 0) return;
+    tree[2 * idx + 1].promise += tree[idx].promise;
+    tree[2 * idx + 1].val += tree[idx].promise;
+    tree[2 * idx + 2].promise += tree[idx].promise;
+    tree[2 * idx + 2].val += tree[idx].promise;
+    tree[idx].promise = 0;
+  }
+  void update(int idx, int cl, int cr, int l, int r, ll val) {
+    if (cr <= l || cl >= r) { return; }
+    if (cl >= l && cr <= r) {
+      tree[idx].val += val;
+      tree[idx].promise += val;
+      return;
     }
-    void update(int idx, int cl, int cr, int l, int r, ll val) {
-        if (cr <= l || cl >= r) {
-            return;
-        }
-        if (cl >= l && cr <= r) {
-            tree[idx].val += val;
-            tree[idx].promise += val;
-            return;
-        }
-        push(idx);
-        int mid = (cl + cr) / 2;
-        update(idx * 2 + 1, cl, mid, l, r, val);
-        update(idx * 2 + 2, mid, cr, l, r, val);
-        tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
-    }
-    ll get(int idx, int cl, int cr, int l, int r) {
-        if (cr <= l || cl >= r) return LINF;
-        if (cl >= l && cr <= r) return tree[idx].val;
-        push(idx);
-        int mid = (cl + cr) / 2;
-        return min(get(idx * 2 + 1, cl, mid, l, r), get(idx * 2 + 2, mid, cr, l, r));
-    }
+    push(idx);
+    int mid = (cl + cr) / 2;
+    update(idx * 2 + 1, cl, mid, l, r, val);
+    update(idx * 2 + 2, mid, cr, l, r, val);
+    tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
+  }
+  ll get(int idx, int cl, int cr, int l, int r) {
+    if (cr <= l || cl >= r) return LINF;
+    if (cl >= l && cr <= r) return tree[idx].val;
+    push(idx);
+    int mid = (cl + cr) / 2;
+    return min(get(idx * 2 + 1, cl, mid, l, r), get(idx * 2 + 2, mid, cr, l, r));
+  }
 };
 
 void solve() {}

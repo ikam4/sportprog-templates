@@ -82,56 +82,41 @@ int main() {
 }
 
 class segtree {
-    struct Node {
-        ll val = 0;
-    };
-    int n;
-    vector<Node> tr;
-
+  struct Node { ll val = 0; };
+  int n;
+  vector<Node> tr;
 public:
-    template<typename T = ll>
-    segtree(const vector<T>& other) : n(sz(other)), tr(4 * n) {
-        if (n) build(0, 0, n, other);
-    }
-
-    void update(int pos, ll val) { update(0, 0, n, pos, val); }
-
-    ll query(int l, int r) { return query(0, 0, n, l, r + 1).val; }
-
+  segtree(const vi& other) : n(sz(other)), tr(4 * n) { if (n) build(0, 0, n, other); }
+  void update(int pos, int val) { update(0, 0, n, pos, val); }
+  ll query(int l, int r) { return query(0, 0, n, l, r + 1).val; }
 private:
-    Node merge(const Node& lhs, const Node& rhs) { return {lhs.val + rhs.val}; }
-
-    template<typename T>
-    void build(int idx, int cl, int cr, const vector<T>& other) {
-        if (cl + 1 == cr) {
-            tr[idx].val = other[cl];
-            return;
-        }
-        int mid = (cl + cr) / 2;
-        build(2 * idx + 1, cl, mid, other);
-        build(2 * idx + 2, mid, cr, other);
-        tr[idx] = merge(tr[2 * idx + 1], tr[2 * idx + 2]);
+  Node merge(const Node& lhs, const Node& rhs) { return {lhs.val + rhs.val}; }
+  void build(int idx, int cl, int cr, const vi& other) {
+    if (cl + 1 == cr) {
+      tr[idx].val = other[cl];
+      return;
     }
-
-    void update(int idx, int cl, int cr, int pos, ll val) {
-        if (cl + 1 == cr) {
-            tr[idx].val = val;
-            return;
-        }
-        int mid = (cl + cr) / 2;
-        if (pos < mid) update(2 * idx + 1, cl, mid, pos, val);
-        else update(2 * idx + 2, mid, cr, pos, val);
-        tr[idx] = merge(tr[2 * idx + 1], tr[2 * idx + 2]);
+    int mid = (cl + cr) / 2;
+    build(2 * idx + 1, cl, mid, other);
+    build(2 * idx + 2, mid, cr, other);
+    tr[idx] = merge(tr[2 * idx + 1], tr[2 * idx + 2]);
+  }
+  void update(int idx, int cl, int cr, int pos, int val) {
+    if (cl + 1 == cr) {
+      tr[idx].val = val;
+      return;
     }
-
-    Node query(int idx, int cl, int cr, int l, int r) {
-        if (cl >= r || cr <= l) return Node{};
-        if (cl >= l && cr <= r) {
-            return tr[idx];
-        }
-        int mid = (cl + cr) / 2;
-        return merge(query(2 * idx + 1, cl, mid, l, r), query(2 * idx + 2, mid, cr, l, r));
-    }
+    int mid = (cl + cr) / 2;
+    if (pos < mid) update(2 * idx + 1, cl, mid, pos, val);
+    else update(2 * idx + 2, mid, cr, pos, val);
+    tr[idx] = merge(tr[2 * idx + 1], tr[2 * idx + 2]);
+  }
+  Node query(int idx, int cl, int cr, int l, int r) {
+    if (cl >= r || cr <= l) return Node{};
+    if (cl >= l && cr <= r) { return tr[idx]; }
+    int mid = (cl + cr) / 2;
+    return merge(query(2 * idx + 1, cl, mid, l, r), query(2 * idx + 2, mid, cr, l, r));
+  }
 };
 
 void solve() {}

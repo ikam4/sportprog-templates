@@ -1219,13 +1219,13 @@ struct centroid_decomp {
     // vector<vector<pii>> ancestors;
     vector<bool> used;
 
-    centroid_decomp(span<vi> g)
+    centroid_decomp(span<vi> g, int root = 0)
         : graph(g)
         , size(graph.size(), 0)
         , centroid_parent(graph.size(), -1)
         // , ancestors(graph.size())
         , used(graph.size(), false) {
-        if (!graph.empty()) build(0, -1);
+        if (!graph.empty()) build(root, -1);
     }
 
     void meta_dfs(int v, int p) {
