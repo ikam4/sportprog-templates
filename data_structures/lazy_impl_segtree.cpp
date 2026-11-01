@@ -107,7 +107,7 @@ class ImplSegtreePool {
     }
 
 public:
-    ImplSegtreePool(int max_n_, int max_nodes = 8'000'000)
+    ImplSegtreePool(int max_n_, int max_nodes = 0)
         : max_n(max_n_) {
         tr.reserve(max_nodes);
         tr_sz++;
@@ -190,8 +190,11 @@ private:
         r_tree = create_node();
 
         int mid = cl + (cr - cl) / 2;
-        split(tr[v].l, cl, mid, pos, tr[l_tree].l, tr[r_tree].l);
-        split(tr[v].r, mid, cr, pos, tr[l_tree].r, tr[r_tree].r);
+        int ll_, lr_, rl_, rr_;
+        split(tr[v].l, cl, mid, pos, ll_, lr_);
+        split(tr[v].r, mid, cr, pos, rl_, rr_);
+        tr[l_tree].l = ll_; tr[r_tree].l = lr_;
+        tr[l_tree].r = rl_; tr[r_tree].r = rr_;
 
         pull(l_tree);
         pull(r_tree);

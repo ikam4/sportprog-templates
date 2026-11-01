@@ -81,6 +81,68 @@ int main() {
     return 0;
 }
 
+// Range addition and range sum, compatible with HLD below.
+class HldSegtree {
+    struct node {
+        ll val = 0;
+        ll promise = 0;
+    };
+    int n = 0;
+    vector<node> tree;
+
+public:
+    HldSegtree() = default;
+    HldSegtree(const vi& arr) : n(sz(arr)), tree(4 * n) {
+        if (n) build(0, 0, n, arr);
+    }
+    void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
+    ll query(int l, int r) { return query(0, 0, n, l, r + 1); }
+
+private:
+    void build(int idx, int cl, int cr, const vi& arr) {
+        if (cl + 1 == cr) {
+            tree[idx].val = arr[cl];
+            return;
+        }
+        int mid = (cl + cr) / 2;
+        build(idx * 2 + 1, cl, mid, arr);
+        build(idx * 2 + 2, mid, cr, arr);
+        tree[idx].val = tree[idx * 2 + 1].val + tree[idx * 2 + 2].val;
+    }
+
+    void push(int idx, int cl, int cr) {
+        int mid = (cl + cr) / 2;
+        if (tree[idx].promise == 0) return;
+        tree[2 * idx + 1].promise += tree[idx].promise;
+        tree[2 * idx + 1].val += tree[idx].promise * (mid - cl);
+        tree[2 * idx + 2].promise += tree[idx].promise;
+        tree[2 * idx + 2].val += tree[idx].promise * (cr - mid);
+        tree[idx].promise = 0;
+    }
+
+    void update(int idx, int cl, int cr, int l, int r, ll val) {
+        if (cr <= l || cl >= r) return;
+        if (cl >= l && cr <= r) {
+            tree[idx].val += val * (cr - cl);
+            tree[idx].promise += val;
+            return;
+        }
+        push(idx, cl, cr);
+        int mid = (cl + cr) / 2;
+        update(idx * 2 + 1, cl, mid, l, r, val);
+        update(idx * 2 + 2, mid, cr, l, r, val);
+        tree[idx].val = tree[idx * 2 + 1].val + tree[idx * 2 + 2].val;
+    }
+
+    ll query(int idx, int cl, int cr, int l, int r) {
+        if (cr <= l || cl >= r) return 0;
+        if (cl >= l && cr <= r) return tree[idx].val;
+        push(idx, cl, cr);
+        int mid = (cl + cr) / 2;
+        return query(idx * 2 + 1, cl, mid, l, r) + query(idx * 2 + 2, mid, cr, l, r);
+    }
+};
+
 template<typename Segtree>
 struct HLD {
     int n;
@@ -92,16 +154,16 @@ struct HLD {
     HLD(int root, span<vi> graph, vi vert_vals)
         : n(sz(graph))
         , graph(graph)
-        , size(n + 1, 0)
-        , parent(n + 1, -1)
-        , depth(n + 1, 0)
-        , heavy(n + 1, -1)
-        , pos(n + 1, -1)
-        , head(n + 1, -1)
-        , vals(n + 1) {
+        , size(n, 0)
+        , parent(n, -1)
+        , depth(n, 0)
+        , heavy(n, -1)
+        , pos(n, -1)
+        , head(n, -1)
+        , vals(n) {
         dfs1(root, -1);
         dfs2(root, -1, root);
-        for (int i = 1; i <= n; ++i) {
+        for (int i = 0; i < n; ++i) {
             vals[pos[i]] = vert_vals[i];
         }
         tr = Segtree(vals);
@@ -152,8 +214,8 @@ struct HLD {
         }
     }
 
-    int query(int u, int v) {
-        int res = 0;
+    ll query(int u, int v) {
+        ll res = 0;
         while (head[u] != head[v]) {
             if (depth[head[u]] >= depth[head[v]]) {
                 res += tr.query(pos[head[u]], pos[u]);

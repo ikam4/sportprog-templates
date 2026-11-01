@@ -145,7 +145,7 @@ struct ModInt {
     }
     template<typename U>
     inline void set(U x) noexcept {
-        if constexpr (std::is_signed_v<U>) {
+        if constexpr (U(-1) < U(0)) {
             __int128 t = (__int128) x % (__int128) MOD;
             if (t < 0) t += MOD;
             v = (T) t;
@@ -163,13 +163,11 @@ struct ModInt {
         return is;
     }
     inline ModInt& operator+=(const ModInt& o) noexcept {
-        v += o.v;
-        if (v >= MOD) v -= MOD;
+        v = (T) (((__int128) v + o.v) % MOD);
         return *this;
     }
     inline ModInt& operator-=(const ModInt& o) noexcept {
-        if (v < o.v) v += MOD;
-        v -= o.v;
+        v = (T) (((__int128) v - o.v + MOD) % MOD);
         return *this;
     }
     inline ModInt& operator*=(const ModInt& o) noexcept {

@@ -76,7 +76,7 @@ int main() {
 class ImplSegtreePool {
     struct Node {
         int l = 0, r = 0;
-        int cnt = 0;
+        ll cnt = 0;
     };
 
     int max_n = 0, tr_sz = 0;
@@ -88,21 +88,21 @@ class ImplSegtreePool {
     }
 
 public:
-    ImplSegtreePool(int max_n_, int max_nodes = 8'000'000)
+    ImplSegtreePool(int max_n_, int max_nodes = 0)
         : max_n(max_n_) {
         tr.reserve(max_nodes);
         tr_sz++;
         tr.eb();
     }
 
-    int update(int v, int pos, int val) { return update(v, 0, max_n, pos, val); }
+    int update(int v, int pos, ll val) { return update(v, 0, max_n, pos, val); }
 
     int merge(int u, int v) { return merge(u, v, 0, max_n); }
 
-    int query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
+    ll query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
 
 private:
-    int update(int v, int cl, int cr, int pos, int val) {
+    int update(int v, int cl, int cr, int pos, ll val) {
         if (!v) v = create_node();
         if (cl + 1 == cr) {
             tr[v].cnt += val;
@@ -136,7 +136,7 @@ private:
         return nw;
     }
 
-    int query(int v, int cl, int cr, int l, int r) const {
+    ll query(int v, int cl, int cr, int l, int r) const {
         if (!v || cl >= r || cr <= l) return 0;
         if (cl >= l && cr <= r) {
             return tr[v].cnt;
@@ -158,11 +158,11 @@ struct ImplSegtree {
         : root(r)
         , seg_pool(&pool) {}
 
-    void update(int pos, int val = 1) {
+    void update(int pos, ll val = 1) {
         if (seg_pool) root = seg_pool->update(root, pos, val);
     }
 
-    int query(int l, int r) const { return seg_pool ? seg_pool->query(root, l, r) : 0; }
+    ll query(int l, int r) const { return seg_pool ? seg_pool->query(root, l, r) : 0; }
 
     void merge(const ImplSegtree& other) {
         if (seg_pool && other.seg_pool) {

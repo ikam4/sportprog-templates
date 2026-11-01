@@ -113,7 +113,7 @@ struct RollbackDSU {
     int comps;
     vector<pair<int*, int>> history;
 
-    RollbackDSU(int n) : parent(n + 1), size(n + 1, 1), comps(n) {
+    RollbackDSU(int n) : parent(n), size(n, 1), comps(n) {
         iota(parent.begin(), parent.end(), 0);
         // history.reserve(1000000);
     }

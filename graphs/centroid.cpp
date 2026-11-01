@@ -84,17 +84,17 @@ int main() {
 struct centroid_decomp {
     span<vi> graph;
     vi size;
-    // vi centroid_parent;
+    vi centroid_parent;
     // vector<vector<pii>> ancestors;
     vector<bool> used;
 
     centroid_decomp(span<vi> g)
         : graph(g)
         , size(graph.size(), 0)
-        // , centroid_parent(graph.size(), -1)
+        , centroid_parent(graph.size(), -1)
         // , ancestors(graph.size())
         , used(graph.size(), false) {
-        build(1, -1);
+        if (!graph.empty()) build(0, -1);
     }
 
     void meta_dfs(int v, int p) {
@@ -120,7 +120,7 @@ struct centroid_decomp {
         meta_dfs(v, -1);
         int c = centroid(v, -1, size[v]);
         used[c] = true;
-        // centroid_parent[c] = p;
+        centroid_parent[c] = p;
         // ancestors[c].eb(0, c);
         // auto dfs = [&](auto& self, int v, int p, int dist) -> void {
         //     ancestors[v].eb(dist, c);

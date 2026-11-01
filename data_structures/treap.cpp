@@ -238,7 +238,7 @@ struct ImplTreap {
         if (!T) {
             return {0, 0};
         }
-        if (tr[T].sz >= x) {
+        if (tr[tr[T][0]].sz >= x) {
             auto [TLL, TLR] = split(tr[T][0], x);
             tr[T][0] = TLR;
             recalc(T);
@@ -295,7 +295,7 @@ struct ImplTreap {
         } else if (x < tr[tr[T][0]].sz) {
             tr[T][0] = erase(tr[T][0], x);
         } else {
-            tr[T][1] = erase(tr[T][1], x);
+            tr[T][1] = erase(tr[T][1], x - tr[tr[T][0]].sz - 1);
         }
         recalc(T);
         return T;

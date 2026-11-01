@@ -205,7 +205,7 @@ namespace SLAE {
                 if (i != row && a[i][col]) {
                     int c = a[i][col];
                     for (int j = col; j <= m; ++j) {
-                        a[i][j] = (a[i][j] - (ull) a[row][j] * c) % MOD;
+                        a[i][j] = (a[i][j] - (ll) a[row][j] * c % MOD + MOD) % MOD;
                         if (a[i][j] < 0) a[i][j] += MOD;
                     }
                 }

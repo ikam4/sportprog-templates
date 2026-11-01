@@ -87,9 +87,9 @@ struct DSU {
     vector<int> parent;
     vector<int> size;
     DSU(int n)
-        : parent(n + 1)
-        , size(n + 1, 1) {
-        for (int i = 0; i <= n; ++i) {
+        : parent(n)
+        , size(n, 1) {
+        for (int i = 0; i < n; ++i) {
             parent[i] = i;
         }
     }
@@ -199,7 +199,7 @@ ll prim_v2(span<vector<pii>> graph) {
 ll boruvka(int n, span<array<int, 3>> edges) {
     int comps = n;
     DSU dsu(n);
-    vi min_edge(n + 1);
+    vi min_edge(n);
     // vector<array<int, 3>> mst_edges;
     ll total = 0;
     while (comps > 1) {
@@ -218,7 +218,7 @@ ll boruvka(int n, span<array<int, 3>> edges) {
                 }
             }
         }
-        for (int i = 1; i <= n; ++i) {
+        for (int i = 0; i < n; ++i) {
             if (min_edge[i] != -1) {
                 auto [u, v, w] = edges[min_edge[i]];
                 if (dsu.union_sets(u, v)) {

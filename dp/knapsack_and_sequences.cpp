@@ -258,6 +258,9 @@ vector<T> lcis(const vector<T>& a, const vector<T>& b) {
     }
 
     vector<int> len(sz(b)), prv(sz(b), -1);
+    // Immutable predecessors: later updates must not change old chains.
+    // O(nm) time and up to O(nm) restoration memory.
+    vector<pair<T, int>> hist;
 
     for (const T& value: a) {
         int best = 0;
@@ -265,10 +268,11 @@ vector<T> lcis(const vector<T>& a, const vector<T>& b) {
         for (int j = 0; j < sz(b); ++j) {
             if (value == b[j] && best + 1 > len[j]) {
                 len[j] = best + 1;
-                prv[j] = last;
+                prv[j] = sz(hist);
+                hist.emplace_back(value, last);
             } else if (value > b[j] && len[j] > best) {
                 best = len[j];
-                last = j;
+                last = prv[j];
             }
         }
     }
@@ -279,8 +283,8 @@ vector<T> lcis(const vector<T>& a, const vector<T>& b) {
     }
 
     vector<T> ans;
-    for (int cur = end; cur != -1; cur = prv[cur]) {
-        ans.push_back(b[cur]);
+    for (int cur = prv[end]; cur != -1; cur = hist[cur].second) {
+        ans.push_back(hist[cur].first);
     }
     reverse(ans.begin(), ans.end());
     return ans;

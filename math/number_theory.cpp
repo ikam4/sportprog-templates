@@ -195,7 +195,7 @@ vector<pair<ll, int>> factor(ll value) {
         value = -value;
     }
 
-    for (ll prime = 2; prime * prime <= value; ++prime) {
+    for (ll prime = 2; prime <= value / prime; ++prime) {
         if (value % prime != 0) {
             continue;
         }

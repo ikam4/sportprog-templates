@@ -213,6 +213,7 @@ public:
     }
 
     int order_of_key(ull val) const {
+        if constexpr (bits < 64) if (val >= (1ULL << bits)) return size();
         int u = 0, ans = 0;
         for (int i = bits - 1; i >= 0; --i) {
             int bit = (val >> i) & 1;
@@ -227,6 +228,7 @@ public:
     }
 
     int count_xor_less(ull val, ull limit) const {
+        if constexpr (bits < 64) if (limit >= (1ULL << bits)) return size();
         int u = 0, ans = 0;
         for (int i = bits - 1; i >= 0; --i) {
             int v_bit = (val >> i) & 1;

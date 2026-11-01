@@ -370,7 +370,7 @@ struct ImplTreap {
         if (!T) {
             return {0, 0};
         }
-        if (tr[T].sz >= x) {
+        if (tr[tr[T][0]].sz >= x) {
             auto [TLL, TLR] = split(tr[T][0], x);
             tr[T][0] = TLR;
             recalc(T);
@@ -427,7 +427,7 @@ struct ImplTreap {
         } else if (x < tr[tr[T][0]].sz) {
             tr[T][0] = erase(tr[T][0], x);
         } else {
-            tr[T][1] = erase(tr[T][1], x);
+            tr[T][1] = erase(tr[T][1], x - tr[tr[T][0]].sz - 1);
         }
         recalc(T);
         return T;
@@ -492,15 +492,16 @@ struct DSU {
     }
 };
 
+// graph[v] stores (neighbor, edge_id); both directions share one unique nonnegative id.
 namespace bridges {
-    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vi> graph, vector<pii>& bridges) {
+    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<pii>& bridges) {
         tin[v] = low[v] = timer++;
-        for (int u: graph[v]) {
-            if (u == p) continue;
+        for (auto [u, id]: graph[v]) {
+            if (id == p) continue;
             if (tin[u]) {
                 low[v] = min(low[v], tin[u]);
             } else {
-                dfs(u, v, tin, low, timer, graph, bridges);
+                dfs(u, id, tin, low, timer, graph, bridges);
                 low[v] = min(low[v], low[u]);
                 if (low[u] > tin[v]) {
                     bridges.eb(v, u);
@@ -519,25 +520,28 @@ namespace bridges {
         // }
     }
 
-    void solve(span<vi> graph) {
+    vector<pii> solve(span<vector<pii>> graph) {
         vi tin(graph.size()), low(graph.size());
         vector<pii> bridges;
         int timer = 1;
-        dfs(1, -1, tin, low, timer, graph, bridges);
+        for (int v = 0; v < sz(graph); ++v) {
+            if (!tin[v]) dfs(v, -1, tin, low, timer, graph, bridges);
+        }
+        return bridges;
     }
 };
 
 namespace dots {
-    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vi> graph, vector<bool>& dot) {
+    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<bool>& dot) {
         tin[v] = low[v] = timer++;
         int children = 0;
-        for (int u: graph[v]) {
-            if (u == p) continue;
+        for (auto [u, id]: graph[v]) {
+            if (id == p) continue;
             if (tin[u]) {
                 low[v] = min(low[v], tin[u]);
             } else {
                 ++children;
-                dfs(u, v, tin, low, timer, graph, dot);
+                dfs(u, id, tin, low, timer, graph, dot);
                 low[v] = min(low[v], low[u]);
                 if (p != -1 && low[u] >= tin[v]) { // remove for block tree
                     dot[v] = true;
@@ -559,11 +563,14 @@ namespace dots {
         }
     }
 
-    void solve(span<vi> graph) {
+    vector<bool> solve(span<vector<pii>> graph) {
         vi tin(graph.size()), low(graph.size());
         vector<bool> dot(graph.size(), false);
         int timer = 1;
-        dfs(1, -1, tin, low, timer, graph, dot);
+        for (int v = 0; v < sz(graph); ++v) {
+            if (!tin[v]) dfs(v, -1, tin, low, timer, graph, dot);
+        }
+        return dot;
     }
 
 };
@@ -608,7 +615,7 @@ namespace scc {
     pair<vector<vi>, vi> solve(span<vi> graph, span<vi> rev_graph) {
         vector<bool> used(graph.size(), false);
         vi ord;
-        for (int u = 1; u < sz(graph); ++u) {
+        for (int u = 0; u < sz(graph); ++u) {
             if (!used[u]) {
                 dfs1(u, used, ord, graph);
             }
@@ -740,8 +747,12 @@ namespace euler {
     }
 };
 
-namespace LCA {
-    const int LOG = 20;
+struct LCA {
+    int LOG;
+    vector<vi> up;
+    vi depth;
+
+    LCA(int root, span<vi> graph) { solve(root, graph); }
     void dfs(int v, int p, span<vi> graph, vector<vi>& up, vi& depth) {
         up[v][0] = (p == -1 ? v : p);
         for (int i = 1; i < LOG; ++i) {
@@ -774,13 +785,21 @@ namespace LCA {
     }
 
     void solve(int root, span<vi> graph) {
-        vector up(graph.size(), vi(LOG));
-        vi depth(graph.size(), 0);
-        dfs(root, -1, graph, up, depth);
+        LOG = max(1, (int) bit_width((unsigned) graph.size()));
+        up.assign(graph.size(), vi(LOG));
+        depth.assign(graph.size(), 0);
+        if (!graph.empty()) dfs(root, -1, graph, up, depth);
     }
+
+    int query(int u, int v) { return get_lca(u, v, depth, up); }
 };
 
-namespace fast_LCA {
+struct fast_LCA {
+    vi ord, euler_ord, first, depth;
+    vector<vi> st;
+
+    fast_LCA(int root, span<vi> graph) { solve(root, graph); }
+
     void dfs(int v, int p, vi& ord, span<vi> graph, vi& depth, vi& euler_ord, vi& first) {
         ord.pb(v);
         euler_ord.pb(depth[v]);
@@ -806,10 +825,14 @@ namespace fast_LCA {
     }
 
     void solve(int root, span<vi> graph) {
-        vi ord, euler_ord, first(graph.size(), -1), depth(graph.size());
+        ord.clear();
+        euler_ord.clear();
+        first.assign(graph.size(), -1);
+        depth.assign(graph.size(), 0);
+        if (graph.empty()) { st.clear(); return; }
         dfs(root, -1, ord, graph, depth, euler_ord, first);
         int LOG = 32 - __builtin_clz(sz(ord));
-        vector st(LOG, vi(sz(ord)));
+        st.assign(LOG, vi(sz(ord)));
         for (int i = 0; i < sz(ord); ++i) {
             st[0][i] = i;
         }
@@ -819,6 +842,10 @@ namespace fast_LCA {
                 st[i][j] = (euler_ord[idx1] < euler_ord[idx2] ? idx1 : idx2);
             }
         }
+    }
+
+    int query(int u, int v) {
+        return get_lca(u, v, st, first, euler_ord, ord);
     }
 };
 
@@ -857,7 +884,7 @@ namespace shortest_path_neg {
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < n; ++j) {
                     if (d[i][k] != INF && d[k][j] != INF && d[i][j] > d[i][k] + d[k][j]) {
-                        d[i][j] = d[i][k] + d[k][j];
+                        d[i][j] = max(-INF, d[i][k] + d[k][j]);
                     }
                 }
             }
@@ -875,7 +902,7 @@ namespace MST {
     ll kruskal(int n, span<array<int, 3>> edges) {
         ll res = 0;
         int comps = n;
-        DSU dsu(n + 1);
+        DSU dsu(n);
         ranges::sort(edges, [](const auto& lhs, const auto& rhs) { return lhs[2] < rhs[2]; });
         for (auto [u, v, w]: edges) {
             if (dsu.unite(u, v)) {
@@ -894,8 +921,8 @@ namespace MST {
         priority_queue<pii, vector<pii>, greater<>> q;
         ll res = 0;
         int cnt = 0;
-        vector<bool> used(n + 1, false);
-        q.emplace(0, 1);
+        vector<bool> used(n, false);
+        q.emplace(0, 0);
         while (!q.empty()) {
             auto [e_w, v] = q.top();
             q.pop();
@@ -914,8 +941,8 @@ namespace MST {
     ll boruvka(int n, span<array<int, 3>> edges) {
         ll res = 0;
         int comps = n;
-        vi min_edge(n + 1);
-        DSU dsu(n + 1);
+        vi min_edge(n);
+        DSU dsu(n);
         while (comps > 1) {
             bool added = false;
             ranges::fill(min_edge, -1);
@@ -932,7 +959,7 @@ namespace MST {
                     }
                 }
             }
-            for (int i = 0; i <= n; ++i) {
+            for (int i = 0; i < n; ++i) {
                 if (min_edge[i] != -1) {
                     auto [u, v, w] = edges[min_edge[i]];
                     if (dsu.unite(u, v)) {
@@ -949,6 +976,68 @@ namespace MST {
     }
 };
 
+// Range addition and range sum, compatible with HLD below.
+class HldSegtree {
+    struct node {
+        ll val = 0;
+        ll promise = 0;
+    };
+    int n = 0;
+    vector<node> tree;
+
+public:
+    HldSegtree() = default;
+    HldSegtree(const vi& arr) : n(sz(arr)), tree(4 * n) {
+        if (n) build(0, 0, n, arr);
+    }
+    void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
+    ll query(int l, int r) { return query(0, 0, n, l, r + 1); }
+
+private:
+    void build(int idx, int cl, int cr, const vi& arr) {
+        if (cl + 1 == cr) {
+            tree[idx].val = arr[cl];
+            return;
+        }
+        int mid = (cl + cr) / 2;
+        build(idx * 2 + 1, cl, mid, arr);
+        build(idx * 2 + 2, mid, cr, arr);
+        tree[idx].val = tree[idx * 2 + 1].val + tree[idx * 2 + 2].val;
+    }
+
+    void push(int idx, int cl, int cr) {
+        int mid = (cl + cr) / 2;
+        if (tree[idx].promise == 0) return;
+        tree[2 * idx + 1].promise += tree[idx].promise;
+        tree[2 * idx + 1].val += tree[idx].promise * (mid - cl);
+        tree[2 * idx + 2].promise += tree[idx].promise;
+        tree[2 * idx + 2].val += tree[idx].promise * (cr - mid);
+        tree[idx].promise = 0;
+    }
+
+    void update(int idx, int cl, int cr, int l, int r, ll val) {
+        if (cr <= l || cl >= r) return;
+        if (cl >= l && cr <= r) {
+            tree[idx].val += val * (cr - cl);
+            tree[idx].promise += val;
+            return;
+        }
+        push(idx, cl, cr);
+        int mid = (cl + cr) / 2;
+        update(idx * 2 + 1, cl, mid, l, r, val);
+        update(idx * 2 + 2, mid, cr, l, r, val);
+        tree[idx].val = tree[idx * 2 + 1].val + tree[idx * 2 + 2].val;
+    }
+
+    ll query(int idx, int cl, int cr, int l, int r) {
+        if (cr <= l || cl >= r) return 0;
+        if (cl >= l && cr <= r) return tree[idx].val;
+        push(idx, cl, cr);
+        int mid = (cl + cr) / 2;
+        return query(idx * 2 + 1, cl, mid, l, r) + query(idx * 2 + 2, mid, cr, l, r);
+    }
+};
+
 template<typename Segtree>
 struct HLD {
     int n;
@@ -960,16 +1049,16 @@ struct HLD {
     HLD(int root, span<vi> graph, vi vert_vals)
         : n(sz(graph))
         , graph(graph)
-        , size(n + 1, 0)
-        , parent(n + 1, -1)
-        , depth(n + 1, 0)
-        , heavy(n + 1, -1)
-        , pos(n + 1, -1)
-        , head(n + 1, -1)
-        , vals(n + 1) {
+        , size(n, 0)
+        , parent(n, -1)
+        , depth(n, 0)
+        , heavy(n, -1)
+        , pos(n, -1)
+        , head(n, -1)
+        , vals(n) {
         dfs1(root, -1);
         dfs2(root, -1, root);
-        for (int i = 1; i <= n; ++i) {
+        for (int i = 0; i < n; ++i) {
             vals[pos[i]] = vert_vals[i];
         }
         tr = Segtree(vals);
@@ -1020,8 +1109,8 @@ struct HLD {
         }
     }
 
-    int query(int u, int v) {
-        int res = 0;
+    ll query(int u, int v) {
+        ll res = 0;
         while (head[u] != head[v]) {
             if (depth[head[u]] >= depth[head[v]]) {
                 res += tr.query(pos[head[u]], pos[u]);
@@ -1100,6 +1189,9 @@ struct TWO_SAT {
     }
 
     bool get_ans() {
+        fill(all(used), false);
+        ord.clear();
+        fill(all(comp), -1);
         for (int i = 0; i < 2 * n; ++i) {
             if (!used[i]) dfs1(i);
         }
@@ -1123,17 +1215,17 @@ struct TWO_SAT {
 struct centroid_decomp {
     span<vi> graph;
     vi size;
-    // vi centroid_parent;
+    vi centroid_parent;
     // vector<vector<pii>> ancestors;
     vector<bool> used;
 
     centroid_decomp(span<vi> g)
         : graph(g)
         , size(graph.size(), 0)
-        // , centroid_parent(graph.size(), -1)
+        , centroid_parent(graph.size(), -1)
         // , ancestors(graph.size())
         , used(graph.size(), false) {
-        build(1, -1);
+        if (!graph.empty()) build(0, -1);
     }
 
     void meta_dfs(int v, int p) {
@@ -1159,7 +1251,7 @@ struct centroid_decomp {
         meta_dfs(v, -1);
         int c = centroid(v, -1, size[v]);
         used[c] = true;
-        // centroid_parent[c] = p;
+        centroid_parent[c] = p;
         // ancestors[c].eb(0, c);
         // auto dfs = [&](auto& self, int v, int p, int dist) -> void {
         //     ancestors[v].eb(dist, c);

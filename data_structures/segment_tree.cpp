@@ -83,22 +83,26 @@ int main() {
 
 class segtree {
     struct Node {
-        int val = 0;
+        ll val = 0;
     };
     int n;
     vector<Node> tr;
 
 public:
-    segtree(const vi& other) : n(sz(other)), tr(4 * n) { build(0, 0, n, other); }
+    template<typename T = ll>
+    segtree(const vector<T>& other) : n(sz(other)), tr(4 * n) {
+        if (n) build(0, 0, n, other);
+    }
 
-    void update(int pos, int val) { update(0, 0, n, pos, val); }
+    void update(int pos, ll val) { update(0, 0, n, pos, val); }
 
-    int query(int l, int r) { return query(0, 0, n, l, r + 1).val; }
+    ll query(int l, int r) { return query(0, 0, n, l, r + 1).val; }
 
 private:
     Node merge(const Node& lhs, const Node& rhs) { return {lhs.val + rhs.val}; }
 
-    void build(int idx, int cl, int cr, const vi& other) {
+    template<typename T>
+    void build(int idx, int cl, int cr, const vector<T>& other) {
         if (cl + 1 == cr) {
             tr[idx].val = other[cl];
             return;
@@ -109,7 +113,7 @@ private:
         tr[idx] = merge(tr[2 * idx + 1], tr[2 * idx + 2]);
     }
 
-    void update(int idx, int cl, int cr, int pos, int val) {
+    void update(int idx, int cl, int cr, int pos, ll val) {
         if (cl + 1 == cr) {
             tr[idx].val = val;
             return;

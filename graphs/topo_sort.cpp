@@ -145,7 +145,7 @@ struct ModInt {
     }
     template<typename U>
     inline void set(U x) noexcept {
-        if constexpr (std::is_signed_v<U>) {
+        if constexpr (U(-1) < U(0)) {
             __int128 t = (__int128) x % (__int128) MOD;
             if (t < 0) t += MOD;
             v = (T) t;
@@ -163,13 +163,11 @@ struct ModInt {
         return is;
     }
     inline ModInt& operator+=(const ModInt& o) noexcept {
-        v += o.v;
-        if (v >= MOD) v -= MOD;
+        v = (T) (((__int128) v + o.v) % MOD);
         return *this;
     }
     inline ModInt& operator-=(const ModInt& o) noexcept {
-        if (v < o.v) v += MOD;
-        v -= o.v;
+        v = (T) (((__int128) v - o.v + MOD) % MOD);
         return *this;
     }
     inline ModInt& operator*=(const ModInt& o) noexcept {
@@ -264,40 +262,41 @@ void bfs(int first, const vector<vi>& graph, vector<bool>& used) {
     }
 }
 
-void topo_sort(int v, const vector<vi>& graph, vector<int>& color, vector<int>& ans) {
+bool topo_sort(int v, const vector<vi>& graph, vector<int>& color, vector<int>& ans) {
     color[v] = 1;
     for (int u: graph[v]) {
         if (color[u] == 0) {
-            topo_sort(u, graph, color, ans);
+            if (!topo_sort(u, graph, color, ans)) return false;
         } else if (color[u] == 1) {
-            cout << "cycle is found" << nn;
-            exit(0);
+            return false;
         }
     }
     color[v] = 2;
     ans.push_back(v);
+    return true;
 }
 
 
 void solve() {
     int n, m; // кол-во вершин и ребер
-    cin >> n >> m;
-    vector<vi> graph(n + 1);
-    vector<bool> used(n + 1, false);
+    cin >> n >> m; // vertices in the input: 0..n-1
+    vector<vi> graph(n);
+    vector<bool> used(n, false);
     while (m--) {
         int a, b;
         cin >> a >> b;
         graph[a].pb(b);
         // graph[b].pb(a); //пусть для топосорт граф будет ориент
     }
-    dfs(1, graph, used);
-    used.assign(n + 1, false);
-    bfs(1, graph, used);
+    if (n > 0) dfs(0, graph, used);
+    used.assign(n, false);
+    if (n > 0) bfs(0, graph, used);
     vector<int> ans;
-    vector<int> color(n + 1, 0);
-    for (int i = 1; i <= n; ++i) {
-        if (color[i] == 0) {
-            topo_sort(i, graph, color, ans);
+    vector<int> color(n, 0);
+    for (int i = 0; i < n; ++i) {
+        if (color[i] == 0 && !topo_sort(i, graph, color, ans)) {
+            cout << "cycle is found" << nn;
+            return;
         }
     }
     reverse(all(ans));

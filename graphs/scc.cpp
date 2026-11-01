@@ -122,7 +122,7 @@ namespace scc {
     pair<vector<vi>, vi> solve(span<vi> graph, span<vi> rev_graph) {
         vector<bool> used(graph.size(), false);
         vi ord;
-        for (int u = 1; u < sz(graph); ++u) {
+        for (int u = 0; u < sz(graph); ++u) {
             if (!used[u]) {
                 dfs1(u, used, ord, graph);
             }

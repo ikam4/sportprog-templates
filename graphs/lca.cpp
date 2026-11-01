@@ -81,8 +81,12 @@ int main() {
     return 0;
 }
 
-namespace LCA {
-    const int LOG = 20;
+struct LCA {
+    int LOG;
+    vector<vi> up;
+    vi depth;
+
+    LCA(int root, span<vi> graph) { solve(root, graph); }
     void dfs(int v, int p, span<vi> graph, vector<vi>& up, vi& depth) {
         up[v][0] = (p == -1 ? v : p);
         for (int i = 1; i < LOG; ++i) {
@@ -115,13 +119,21 @@ namespace LCA {
     }
 
     void solve(int root, span<vi> graph) {
-        vector up(graph.size(), vi(LOG));
-        vi depth(graph.size(), 0);
-        dfs(root, -1, graph, up, depth);
+        LOG = max(1, (int) bit_width((unsigned) graph.size()));
+        up.assign(graph.size(), vi(LOG));
+        depth.assign(graph.size(), 0);
+        if (!graph.empty()) dfs(root, -1, graph, up, depth);
     }
+
+    int query(int u, int v) { return get_lca(u, v, depth, up); }
 };
 
-namespace fast_LCA {
+struct fast_LCA {
+    vi ord, euler_ord, first, depth;
+    vector<vi> st;
+
+    fast_LCA(int root, span<vi> graph) { solve(root, graph); }
+
     void dfs(int v, int p, vi& ord, span<vi> graph, vi& depth, vi& euler_ord, vi& first) {
         ord.pb(v);
         euler_ord.pb(depth[v]);
@@ -147,10 +159,14 @@ namespace fast_LCA {
     }
 
     void solve(int root, span<vi> graph) {
-        vi ord, euler_ord, first(graph.size(), -1), depth(graph.size());
+        ord.clear();
+        euler_ord.clear();
+        first.assign(graph.size(), -1);
+        depth.assign(graph.size(), 0);
+        if (graph.empty()) { st.clear(); return; }
         dfs(root, -1, ord, graph, depth, euler_ord, first);
         int LOG = 32 - __builtin_clz(sz(ord));
-        vector st(LOG, vi(sz(ord)));
+        st.assign(LOG, vi(sz(ord)));
         for (int i = 0; i < sz(ord); ++i) {
             st[0][i] = i;
         }
@@ -160,6 +176,10 @@ namespace fast_LCA {
                 st[i][j] = (euler_ord[idx1] < euler_ord[idx2] ? idx1 : idx2);
             }
         }
+    }
+
+    int query(int u, int v) {
+        return get_lca(u, v, st, first, euler_ord, ord);
     }
 };
 

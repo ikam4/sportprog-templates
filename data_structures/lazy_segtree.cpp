@@ -153,23 +153,27 @@ private:
     }
 };
 
-// попроще на сумму
+// попроще: прибавление на отрезке и минимум
 class segtree {
     struct node {
-        int val = 0;
-        int promise = 0;
+        ll val = 0;
+        ll promise = 0;
     };
     int n;
     vector<node> tree;
 
 public:
     segtree(int k) : n(k), tree(4 * n) {}
-    segtree(const vector<int>& arr) : n(sz(arr)), tree(4 * n) { build(0, 0, n, arr); }
-    void update(int l, int r, int val) { update(0, 0, n, l, r + 1, val); }
-    int get(int l, int r) { return get(0, 0, n, l, r + 1); }
+    template<typename T = ll>
+    segtree(const vector<T>& arr) : n(sz(arr)), tree(4 * n) {
+        if (n) build(0, 0, n, arr);
+    }
+    void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
+    ll get(int l, int r) { return get(0, 0, n, l, r + 1); }
 
 private:
-    void build(int idx, int cl, int cr, const vector<int>& arr) {
+    template<typename T>
+    void build(int idx, int cl, int cr, const vector<T>& arr) {
         if (cl + 1 == cr) {
             tree[idx].val = arr[cl];
             return;
@@ -188,7 +192,7 @@ private:
         tree[2 * idx + 2].val += tree[idx].promise;
         tree[idx].promise = 0;
     }
-    void update(int idx, int cl, int cr, int l, int r, int val) {
+    void update(int idx, int cl, int cr, int l, int r, ll val) {
         if (cr <= l || cl >= r) {
             return;
         }
@@ -203,8 +207,8 @@ private:
         update(idx * 2 + 2, mid, cr, l, r, val);
         tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
     }
-    int get(int idx, int cl, int cr, int l, int r) {
-        if (cr <= l || cl >= r) return INF;
+    ll get(int idx, int cl, int cr, int l, int r) {
+        if (cr <= l || cl >= r) return LINF;
         if (cl >= l && cr <= r) return tree[idx].val;
         push(idx);
         int mid = (cl + cr) / 2;

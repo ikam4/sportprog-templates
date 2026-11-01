@@ -97,11 +97,11 @@ void euler(int v, auto& graph, auto& deleted) {
 
 void solve() {
     int n, m; // кол-во вершин и ребер
-    cin >> n >> m;
-    vector<vector<pii>> graph(n + 1);
-    vector<bool> deleted(m + 1, false);
-    vector<int> deg(n + 1);
-    for (int i = 1; i <= m; ++i) {
+    cin >> n >> m; // vertices in the input: 0..n-1
+    vector<vector<pii>> graph(n);
+    vector<bool> deleted(m, false);
+    vector<int> deg(n);
+    for (int i = 0; i < m; ++i) {
         int a, b;
         cin >> a >> b;
         graph[a].eb(b, i);
@@ -114,9 +114,9 @@ void solve() {
     // алгос по сути тут такой же, просто надо еще обратные ребра добавить, короче разобьем и
     // проверим, что есть только 1 компонента с ребрами
 
-    int start_node = 0;
-    for (int i = 1; i <= n; ++i) {
-        if (!start_node && deg[i] % 2 == 0 && deg[i] > 0) {
+    int start_node = -1;
+    for (int i = 0; i < n; ++i) {
+        if (start_node == -1 && deg[i] % 2 == 0 && deg[i] > 0) {
             start_node = i;
         }
         if (deg[i] % 2 == 1) {
@@ -124,10 +124,12 @@ void solve() {
             break;
         }
     }
-    if (!start_node) {
+    if (start_node == -1 && m == 0 && n > 0) start_node = 0;
+    if (start_node == -1) {
         cout << -1;
         return;
     }
+    ans.clear();
     euler(start_node, graph, deleted);
     ranges::reverse(ans);
     if (sz(ans) != m + 1) {
@@ -148,10 +150,10 @@ void euler2(int v, auto& graph) {
 
 void solve2() { // для ориент
     int n, m; // кол-во вершин и ребер
-    cin >> n >> m;
-    vector<vi> graph(n + 1);
-    vector<int> in(n + 1), out(n + 1);
-    for (int i = 1; i <= m; ++i) {
+    cin >> n >> m; // vertices in the input: 0..n-1
+    vector<vi> graph(n);
+    vector<int> in(n), out(n);
+    for (int i = 0; i < m; ++i) {
         int a, b;
         cin >> a >> b;
         graph[a].pb(b);
@@ -165,7 +167,7 @@ void solve2() { // для ориент
 
     int cnt1 = 0;
     int cnt2 = 0;
-    for (int i = 1; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         if (in[i] - out[i] == 1) {
             cnt1++;
         } else if (out[i] - in[i] == 1) {
@@ -183,9 +185,9 @@ void solve2() { // для ориент
         return;
     }
 
-    int start_node = 0;
-    for (int i = 1; i <= n; ++i) {
-        if (!start_node && in[i] == out[i] && in[i] + out[i] > 0) {
+    int start_node = -1;
+    for (int i = 0; i < n; ++i) {
+        if (start_node == -1 && in[i] == out[i] && in[i] + out[i] > 0) {
             start_node = i;
         }
         if (out[i] - in[i] == 1) {
@@ -193,10 +195,12 @@ void solve2() { // для ориент
             break;
         }
     }
-    if (!start_node) {
+    if (start_node == -1 && m == 0 && n > 0) start_node = 0;
+    if (start_node == -1) {
         cout << -1;
         return;
     }
+    ans.clear();
     euler2(start_node, graph);
     ranges::reverse(ans);
     if (sz(ans) != m + 1) {

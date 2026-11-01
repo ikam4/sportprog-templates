@@ -129,6 +129,9 @@ struct TWO_SAT {
     }
 
     bool get_ans() {
+        fill(all(used), false);
+        ord.clear();
+        fill(all(comp), -1);
         for (int i = 0; i < 2 * n; ++i) {
             if (!used[i]) dfs1(i);
         }

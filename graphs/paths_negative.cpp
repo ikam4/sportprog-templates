@@ -81,7 +81,22 @@ int main() {
     return 0;
 }
 
-void bellman_ford(int s, int target, int n, span<array<int, 3>> edges) {
+struct BellmanResult {
+    vll dp;
+    vi parent;
+    bool cycle;
+
+    // Conservative: restore only when no reachable negative cycle was found.
+    vi get_path(int target) const {
+        if (cycle || dp[target] == LINF) return {};
+        vi path;
+        for (int v = target; v != -1; v = parent[v]) path.pb(v);
+        reverse(all(path));
+        return path;
+    }
+};
+
+BellmanResult bellman_ford(int s, int n, span<array<int, 3>> edges) {
     vll dp(n, LINF);
     vi parent(n, -1);
     dp[s] = 0;
@@ -100,21 +115,41 @@ void bellman_ford(int s, int target, int n, span<array<int, 3>> edges) {
             break;
         }
     }
-    if (cycle) {
+    return {std::move(dp), std::move(parent), cycle};
+}
+
+// Original target-and-print interface retained as an example/compatibility overload.
+void bellman_ford(int s, int target, int n, span<array<int, 3>> edges) {
+    auto result = bellman_ford(s, n, edges);
+    if (result.cycle) {
         cout << "Negative cycle found" << nn;
-    } else if (dp[target] == LINF) {
+    } else if (result.dp[target] == LINF) {
         cout << "No path" << nn;
     } else {
-        vi ans;
-        for (int v = target; v != -1; v = parent[v]) {
-            ans.pb(v);
-        }
-        reverse(all(ans));
-        cout << "Path: " << ans;
+        cout << "Path: " << result.get_path(target);
     }
 }
 
-void floyd_yorshell(int n, span<vi> matrix) {
+struct FloydResult {
+    vector<vll> dp;
+    vector<vi> nxt;
+    bool cycle;
+
+    // The old local restoration helper is now accessible to the caller.
+    // With any negative cycle, this helper conservatively returns no path.
+    vi get_path(int u, int v) const {
+        if (cycle || dp[u][v] == LINF) return {};
+        vi path;
+        for (int curr = u; curr != v; curr = nxt[curr][v]) {
+            if (curr == -1) return {};
+            path.pb(curr);
+        }
+        path.pb(v);
+        return path;
+    }
+};
+
+FloydResult floyd_yorshell(int n, span<vi> matrix) {
     vector dp(n, vll(n, LINF));
     vector nxt(n, vi(n, -1));
     for (int i = 0; i < n; ++i) {
@@ -130,7 +165,7 @@ void floyd_yorshell(int n, span<vi> matrix) {
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 if (dp[i][k] < LINF && dp[k][j] < LINF && dp[i][j] > dp[i][k] + dp[k][j]) {
-                    dp[i][j] = dp[i][k] + dp[k][j];
+                    dp[i][j] = max(-LINF, dp[i][k] + dp[k][j]);
                     nxt[i][j] = nxt[i][k];
                 }
             }
@@ -143,20 +178,14 @@ void floyd_yorshell(int n, span<vi> matrix) {
             break;
         }
     }
-    if (cycle) {
-        cout << "Negative cycle found" << nn;
-    } else {
-        auto get_path = [&](int u, int v) -> vi {
-            if (dp[u][v] == LINF) return {};
-            vi path;
-            for (int curr = u; curr != v; curr = nxt[curr][v]) {
-                if (curr == -1) return {};
-                path.pb(curr);
-            }
-            path.pb(v);
-            return path;
-        };
-    }
+    return {std::move(dp), std::move(nxt), cycle};
+}
+
+// The algorithm returns data; the original diagnostic output is kept separately.
+void floyd_example(int n, span<vi> matrix) {
+    auto result = floyd_yorshell(n, matrix);
+    if (result.cycle) cout << "Negative cycle found" << nn;
+    // Otherwise use result.dp and result.get_path(u, v).
 }
 
 void solve() {}

@@ -144,7 +144,7 @@ struct ModInt {
     }
     template<typename U>
     inline void set(U x) noexcept {
-        if constexpr (std::is_signed_v<U>) {
+        if constexpr (U(-1) < U(0)) {
             __int128 t = (__int128) x % (__int128) MOD;
             if (t < 0) t += MOD;
             v = (T) t;
@@ -162,13 +162,11 @@ struct ModInt {
         return is;
     }
     inline ModInt& operator+=(const ModInt& o) noexcept {
-        v += o.v;
-        if (v >= MOD) v -= MOD;
+        v = (T) (((__int128) v + o.v) % MOD);
         return *this;
     }
     inline ModInt& operator-=(const ModInt& o) noexcept {
-        if (v < o.v) v += MOD;
-        v -= o.v;
+        v = (T) (((__int128) v - o.v + MOD) % MOD);
         return *this;
     }
     inline ModInt& operator*=(const ModInt& o) noexcept {
@@ -238,15 +236,16 @@ int main() {
     return 0;
 }
 
+// graph[v] stores (neighbor, edge_id); both directions share one unique nonnegative id.
 namespace bridges {
-    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vi> graph, vector<pii>& bridges) {
+    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<pii>& bridges) {
         tin[v] = low[v] = timer++;
-        for (int u: graph[v]) {
-            if (u == p) continue;
+        for (auto [u, id]: graph[v]) {
+            if (id == p) continue;
             if (tin[u]) {
                 low[v] = min(low[v], tin[u]);
             } else {
-                dfs(u, v, tin, low, timer, graph, bridges);
+                dfs(u, id, tin, low, timer, graph, bridges);
                 low[v] = min(low[v], low[u]);
                 if (low[u] > tin[v]) {
                     bridges.eb(v, u);
@@ -265,25 +264,28 @@ namespace bridges {
         // }
     }
 
-    void solve(span<vi> graph) {
+    vector<pii> solve(span<vector<pii>> graph) {
         vi tin(graph.size()), low(graph.size());
         vector<pii> bridges;
         int timer = 1;
-        dfs(1, -1, tin, low, timer, graph, bridges);
+        for (int v = 0; v < sz(graph); ++v) {
+            if (!tin[v]) dfs(v, -1, tin, low, timer, graph, bridges);
+        }
+        return bridges;
     }
 };
 
 namespace dots {
-    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vi> graph, vector<bool>& dot) {
+    void dfs(int v, int p, vi& tin, vi& low, int& timer, span<vector<pii>> graph, vector<bool>& dot) {
         tin[v] = low[v] = timer++;
         int children = 0;
-        for (int u: graph[v]) {
-            if (u == p) continue;
+        for (auto [u, id]: graph[v]) {
+            if (id == p) continue;
             if (tin[u]) {
                 low[v] = min(low[v], tin[u]);
             } else {
                 ++children;
-                dfs(u, v, tin, low, timer, graph, dot);
+                dfs(u, id, tin, low, timer, graph, dot);
                 low[v] = min(low[v], low[u]);
                 if (p != -1 && low[u] >= tin[v]) { // remove for block tree
                     dot[v] = true;
@@ -305,11 +307,14 @@ namespace dots {
         }
     }
 
-    void solve(span<vi> graph) {
+    vector<bool> solve(span<vector<pii>> graph) {
         vi tin(graph.size()), low(graph.size());
         vector<bool> dot(graph.size(), false);
         int timer = 1;
-        dfs(1, -1, tin, low, timer, graph, dot);
+        for (int v = 0; v < sz(graph); ++v) {
+            if (!tin[v]) dfs(v, -1, tin, low, timer, graph, dot);
+        }
+        return dot;
     }
 
 };
