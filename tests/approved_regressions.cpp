@@ -302,6 +302,12 @@ void test_modint_gauss() {
     check(gauss_example::SLAE::gauss_mod({{-1, 1}}, ans) == 1 && ans == vi{mod - 1}, "modular negative coefficient");
     check(gauss_example::SLAE::gauss_mod({{mod, 1}}, ans) == 0, "modular zero pivot with nonzero right side");
     check(gauss_example::SLAE::gauss_mod({{mod, -mod}}, ans) == 2, "modular zero row after normalization");
+
+    vector<double> real_ans;
+    check(gauss_example::SLAE::gauss({{11, 100'000'000}}, real_ans) == 1 &&
+          abs(11 * real_ans[0] - 100'000'000) < 1e-6, "real Gauss accepts rounding at large scale");
+    check(gauss_example::SLAE::gauss({{11, 100'000'000}, {11, 100'000'001}}, real_ans) == 0,
+          "real Gauss still detects inconsistent equations at large scale");
 }
 
 void test_pool_and_bits() {
@@ -704,11 +710,13 @@ void test_string_automata() {
 
     suffix_automaton_example::SuffAuto<> suffix;
     suffix.build("ab");
-    suffix.prepare_kth();
+    suffix.build_endpos();
+    check(suffix.count_occs("b") == 1 && suffix.get_state("bb") == -1,
+          "suffix automaton finds substrings before extending");
     suffix.extend('b');
-    suffix.prepare_kth(true);
-    check(suffix.count_occs("b") == 2 && suffix.kth_substr(5) == "b" && suffix.kth_substr(6) == "bb",
-          "suffix automaton rebuilds order and ranks after extending");
+    suffix.build_endpos();
+    check(suffix.count_occs("b") == 2 && suffix.count_occs("bb") == 1 && suffix.get_state("bb") != -1,
+          "suffix automaton finds new substrings and recounts occurrences after extending");
     suffix.extend('a');
     suffix.build_endpos();
     check(suffix.count_occs("a") == 2 && suffix.count_occs("b") == 2 && suffix.count_occs("bb") == 1,

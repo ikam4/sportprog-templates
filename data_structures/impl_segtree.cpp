@@ -1,4 +1,4 @@
-// Лучший шаблон
+// BEST TEMPLATE EVER by ikam
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -28,35 +28,96 @@ using vstr = vector<string>;
 using vll = vector<ll>;
 using i128 = __int128_t;
 
-template<class T> inline istream& operator>>(istream& in, vector<T>& a) {
+template<class T> istream& operator>>(istream& in, vector<T>& a);
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a);
+template<class A, class B> istream& operator>>(istream& in, pair<A, B>& p) { return in >> p.fi >> p.se; }
+template<class A, class B> ostream& operator<<(ostream& out, const pair<A, B>& p) { return out << p.fi << ' ' << p.se; }
+template<class T> istream& operator>>(istream& in, vector<T>& a) {
     for (auto& x: a) in >> x;
     return in;
 }
-template<class T> inline ostream& operator<<(ostream& out, const vector<T>& a) {
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a) {
     for (int i = 0; i < sz(a); ++i) out << a[i] << " \n"[i + 1 == sz(a)];
     return out;
 }
 
+template<class T, class U> inline bool chmin(T& a, const U& b) {
+    if (!(b < a)) return false;
+    a = b;
+    return true;
+}
+template<class T, class U> inline bool chmax(T& a, const U& b) {
+    if (!(a < b)) return false;
+    a = b;
+    return true;
+}
+
+#ifdef LOCAL
+namespace debug_detail {
+    template<class T> ostream& print(const T& value) {
+        cerr << value;
+        return cerr;
+    }
+    template<class T> ostream& print(const vector<T>& values);
+    template<class A, class B> ostream& print(const pair<A, B>& p) {
+        cerr << '(';
+        print(p.fi) << ", ";
+        return print(p.se) << ')';
+    }
+    template<class T> ostream& print(const vector<T>& values) {
+        cerr << '[';
+        for (int i = 0; i < sz(values); ++i) {
+            if (i) cerr << ", ";
+            print(values[i]);
+        }
+        return cerr << ']';
+    }
+    template<class... T> void print_values(const T&... values) {
+        ((cerr << ' ', print(values)), ...);
+        cerr << nn;
+    }
+}
+#define dbg(...) (std::cerr << "[" #__VA_ARGS__ "]", debug_detail::print_values(__VA_ARGS__))
+#else
+#define dbg(...) ((void) 0)
+#endif
+
 inline int msb(ll x) { return x ? 63 - __builtin_clzll((ull) x) : -1; } // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) { return x ? __builtin_ctzll((ull) x) : -1; } // младший 1-бит (нумерация с нуля)
 
-const int MOD = 1e9 + 7;
-const int INF = 0x3f3f3f3f;
-const ll LINF = 0x3f3f3f3f3f3f3f3fLL;
+constexpr int MOD = 1'000'000'007;
+constexpr int INF = 0x3f3f3f3f;
+constexpr ll LINF = 0x3f3f3f3f3f3f3f3fLL;
 const ld PI = acos(-1.0L);
-const ld EPS = 1e-9;
+constexpr ld EPS = 1e-9L;
 
-template<typename T, typename K> inline T modpow(T a, K e) {
+template<class T, class K, class Mul> inline T binpow_apply(T& a, K& e, Mul multiply) {
     T r = 1;
-    for (; e; e >>= 1, a = (ull) a * a % MOD)
-        if (e & 1) r = (ull) r * a % MOD;
+    for (; e > 1; e >>= 1) {
+        if (e & 1) r = multiply(r, a);
+        a = multiply(a, a);
+    }
+    r = multiply(r, a);
     return r;
 }
-template<typename T, typename K> inline T binpow(T a, K e) {
-    T r = 1;
-    for (; e; e >>= 1, a = a * a)
-        if (e & 1) r = r * a;
-    return r;
+template<class T, class K> inline T binpow(T a, K e) {
+    assert(e >= 0);
+    if (!(e > 0)) return 1;
+    return binpow_apply(a, e, multiplies<>{});
+}
+template<class T = remove_cv_t<decltype(MOD)>, class A, class K> inline T modpow(A a, K e, T mod = MOD) {
+    static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
+    assert(e >= 0 && mod > 0);
+    if (mod == 1 || !(e > 0)) return mod != 1;
+    using Common = common_type_t<A, T>;
+    using Remainder = conditional_t<is_signed_v<A> && is_unsigned_v<Common>, i128, Common>;
+    Remainder remainder = (Remainder) a % mod;
+    if (remainder < 0) remainder += mod;
+    T base = (T) remainder;
+    return binpow_apply(base, e, [m = (ull) mod](T x, T y) -> T {
+        if (m <= (1ULL << 32)) return (T) ((ull) x * y % m);
+        return (T) ((__uint128_t) x * y % m);
+    });
 }
 
 void solve();
@@ -74,65 +135,66 @@ int main() {
 }
 
 class ImplSegtreePool {
-  struct Node {
-    int l = 0, r = 0;
-    int cnt = 0;
-  };
-  int max_n = 0, tr_sz = 0;
-  vector<Node> tr;
-  int create_node() {
-    tr.eb();
-    return tr_sz++;
-  }
+    struct Node {
+        int l = 0, r = 0;
+        int cnt = 0;
+    };
+    int max_n = 0;
+    vector<Node> tr;
+    int create_node() {
+        int v = sz(tr);
+        tr.eb();
+        return v;
+    }
+
 public:
-  ImplSegtreePool(int max_n_, int max_nodes = 0)
-    : max_n(max_n_) {
-    tr.reserve(max_nodes);
-    tr_sz++;
-    tr.eb();
-  }
-  int update(int v, int pos, int val) { return update(v, 0, max_n, pos, val); }
-  int merge(int u, int v) { return merge(u, v, 0, max_n); }
-  int query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
+    ImplSegtreePool(int max_n_, int max_nodes = 0)
+        : max_n(max_n_) {
+        tr.reserve(max_nodes);
+        tr.eb();
+    }
+    int update(int v, int pos, int val) { return update(v, 0, max_n, pos, val); }
+    int merge(int u, int v) { return merge(u, v, 0, max_n); }
+    int query(int v, int l, int r) const { return query(v, 0, max_n, l, r + 1); }
+
 private:
-  int update(int v, int cl, int cr, int pos, int val) {
-    if (!v) v = create_node();
-    if (cl + 1 == cr) {
-      tr[v].cnt += val;
-      return v;
+    int update(int v, int cl, int cr, int pos, int val) {
+        if (!v) v = create_node();
+        if (cl + 1 == cr) {
+            tr[v].cnt += val;
+            return v;
+        }
+        int mid = cl + (cr - cl) / 2;
+        if (pos < mid) {
+            int to_l = update(tr[v].l, cl, mid, pos, val);
+            tr[v].l = to_l;
+        } else {
+            int to_r = update(tr[v].r, mid, cr, pos, val);
+            tr[v].r = to_r;
+        }
+        tr[v].cnt = tr[tr[v].l].cnt + tr[tr[v].r].cnt;
+        return v;
     }
-    int mid = cl + (cr - cl) / 2;
-    if (pos < mid) {
-      int to_l = update(tr[v].l, cl, mid, pos, val);
-      tr[v].l = to_l;
-    } else {
-      int to_r = update(tr[v].r, mid, cr, pos, val);
-      tr[v].r = to_r;
+    int merge(int u, int v, int cl, int cr) {
+        if (!u || !v) return u ? u : v;
+        if (cl + 1 == cr) {
+            tr[u].cnt += tr[v].cnt;
+            return u;
+        }
+        int mid = cl + (cr - cl) / 2;
+        tr[u].l = merge(tr[u].l, tr[v].l, cl, mid);
+        tr[u].r = merge(tr[u].r, tr[v].r, mid, cr);
+        tr[u].cnt = tr[tr[u].l].cnt + tr[tr[u].r].cnt;
+        return u;
     }
-    tr[v].cnt = tr[tr[v].l].cnt + tr[tr[v].r].cnt;
-    return v;
-  }
-  int merge(int u, int v, int cl, int cr) {
-    if (!u || !v) return u ? u : v;
-    int nw = create_node();
-    if (cl + 1 == cr) {
-      tr[nw].cnt = tr[u].cnt + tr[v].cnt;
-      return nw;
+    int query(int v, int cl, int cr, int l, int r) const {
+        if (!v || cl >= r || cr <= l) return 0;
+        if (cl >= l && cr <= r) {
+            return tr[v].cnt;
+        }
+        int mid = cl + (cr - cl) / 2;
+        return query(tr[v].l, cl, mid, l, r) + query(tr[v].r, mid, cr, l, r);
     }
-    int mid = cl + (cr - cl) / 2;
-    int to_l = merge(tr[u].l, tr[v].l, cl, mid);
-    int to_r = merge(tr[u].r, tr[v].r, mid, cr);
-    tr[nw].l = to_l;
-    tr[nw].r = to_r;
-    tr[nw].cnt = tr[tr[nw].l].cnt + tr[tr[nw].r].cnt;
-    return nw;
-  }
-  int query(int v, int cl, int cr, int l, int r) const {
-    if (!v || cl >= r || cr <= l) return 0;
-    if (cl >= l && cr <= r) { return tr[v].cnt; }
-    int mid = cl + (cr - cl) / 2;
-    return query(tr[v].l, cl, mid, l, r) + query(tr[v].r, mid, cr, l, r);
-  }
 };
 
 struct ImplSegtree {

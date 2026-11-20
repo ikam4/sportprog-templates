@@ -100,7 +100,10 @@ template<class T, class U> inline bool chmax(T& a, const U& b) {
 
 #ifdef LOCAL
 namespace debug_detail {
-    template<class T> ostream& print(const T& value) { cerr << value; return cerr; }
+    template<class T> ostream& print(const T& value) {
+        cerr << value;
+        return cerr;
+    }
     template<class T> ostream& print(const vector<T>& values);
     template<class A, class B> ostream& print(const pair<A, B>& p) {
         cerr << '(';
@@ -152,12 +155,10 @@ template<class T = remove_cv_t<decltype(MOD)>, class A, class K> inline T modpow
     static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
     assert(e >= 0 && mod > 0);
     if (mod == 1 || !(e > 0)) return mod != 1;
-
     using Common = common_type_t<A, T>;
     using Remainder = conditional_t<is_signed_v<A> && is_unsigned_v<Common>, i128, Common>;
     Remainder remainder = (Remainder) a % mod;
     if (remainder < 0) remainder += mod;
-
     T base = (T) remainder;
     return binpow_apply(base, e, [m = (ull) mod](T x, T y) -> T {
         if (m <= (1ULL << 32)) return (T) ((ull) x * y % m);
@@ -171,8 +172,8 @@ inline uint64_t splitmix64(uint64_t x) noexcept {
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
     return x ^ (x >> 31);
 }
-static uint64_t sm_state = (uint64_t) chrono::steady_clock::now().time_since_epoch().count() ^
-                           (uint64_t) (uintptr_t) &sm_state;
+static uint64_t sm_state =
+    (uint64_t) chrono::steady_clock::now().time_since_epoch().count() ^ (uint64_t) (uintptr_t) &sm_state;
 inline uint64_t rnd() noexcept {
     sm_state += 0x9e3779b97f4a7c15ULL;
     return splitmix64(sm_state);
@@ -183,7 +184,9 @@ struct chash {
         static const uint64_t s = rnd();
         return s;
     }
-    template<class T> enable_if_t<(is_integral_v<T> || is_enum_v<T>) && sizeof(T) <= sizeof(uint64_t), size_t> operator()(T x) const noexcept {
+    template<class T>
+    enable_if_t<(is_integral_v<T> || is_enum_v<T>) && sizeof(T) <= sizeof(uint64_t), size_t>
+    operator()(T x) const noexcept {
         return (size_t) splitmix64((uint64_t) x + seed());
     }
     size_t operator()(string_view s) const noexcept {
@@ -214,8 +217,9 @@ struct chash {
 
 template<class K, class V> using hash_map = __gnu_pbds::gp_hash_table<K, V, chash>;
 template<class K> using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, chash>;
-template<class T> using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
-                                                __gnu_pbds::tree_order_statistics_node_update>;
+template<class T>
+using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
+                                 __gnu_pbds::tree_order_statistics_node_update>;
 // order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (нумерация с нуля)
 
 template<class Int, class Coef> inline Int extgcd_core(Int a, Int b, Coef& x, Coef& y) {
@@ -267,8 +271,8 @@ template<typename T, T MOD> struct ModInt {
     template<class U> void set(U x) noexcept {
         using Word = conditional_t<(U(-1) < U(0)), ll, ull>;
         using Wide = conditional_t<is_signed_v<Word>, i128, __uint128_t>;
-        constexpr bool fits_word = (is_integral_v<U> || is_enum_v<U>)
-            && sizeof(U) <= sizeof(Word) && MOD <= numeric_limits<Word>::max();
+        constexpr bool fits_word =
+            (is_integral_v<U> || is_enum_v<U>) && sizeof(U) <= sizeof(Word) && MOD <= numeric_limits<Word>::max();
         using Work = conditional_t<fits_word, Word, Wide>;
         Work residue = (Work) x % (Work) MOD;
         v = (T) (residue < 0 ? residue + (Work) MOD : residue);
@@ -315,7 +319,6 @@ template<typename T, T MOD> struct ModInt {
     friend bool operator==(const ModInt& a, const ModInt& b) noexcept { return a.v == b.v; }
     friend bool operator!=(const ModInt& a, const ModInt& b) noexcept { return !(a == b); }
 };
-
 using mint = ModInt<int, MOD>;
 
 void solve();

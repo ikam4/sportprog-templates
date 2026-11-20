@@ -1,4 +1,4 @@
-// Лучший шаблон
+// BEST TEMPLATE EVER by ikam
 #include <bits/stdc++.h>
 
 #define nn '\n'
@@ -28,35 +28,96 @@ using vstr = vector<string>;
 using vll = vector<ll>;
 using i128 = __int128_t;
 
-template<class T> inline istream& operator>>(istream& in, vector<T>& a) {
+template<class T> istream& operator>>(istream& in, vector<T>& a);
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a);
+template<class A, class B> istream& operator>>(istream& in, pair<A, B>& p) { return in >> p.fi >> p.se; }
+template<class A, class B> ostream& operator<<(ostream& out, const pair<A, B>& p) { return out << p.fi << ' ' << p.se; }
+template<class T> istream& operator>>(istream& in, vector<T>& a) {
     for (auto& x: a) in >> x;
     return in;
 }
-template<class T> inline ostream& operator<<(ostream& out, const vector<T>& a) {
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a) {
     for (int i = 0; i < sz(a); ++i) out << a[i] << " \n"[i + 1 == sz(a)];
     return out;
 }
 
+template<class T, class U> inline bool chmin(T& a, const U& b) {
+    if (!(b < a)) return false;
+    a = b;
+    return true;
+}
+template<class T, class U> inline bool chmax(T& a, const U& b) {
+    if (!(a < b)) return false;
+    a = b;
+    return true;
+}
+
+#ifdef LOCAL
+namespace debug_detail {
+    template<class T> ostream& print(const T& value) {
+        cerr << value;
+        return cerr;
+    }
+    template<class T> ostream& print(const vector<T>& values);
+    template<class A, class B> ostream& print(const pair<A, B>& p) {
+        cerr << '(';
+        print(p.fi) << ", ";
+        return print(p.se) << ')';
+    }
+    template<class T> ostream& print(const vector<T>& values) {
+        cerr << '[';
+        for (int i = 0; i < sz(values); ++i) {
+            if (i) cerr << ", ";
+            print(values[i]);
+        }
+        return cerr << ']';
+    }
+    template<class... T> void print_values(const T&... values) {
+        ((cerr << ' ', print(values)), ...);
+        cerr << nn;
+    }
+}
+#define dbg(...) (std::cerr << "[" #__VA_ARGS__ "]", debug_detail::print_values(__VA_ARGS__))
+#else
+#define dbg(...) ((void) 0)
+#endif
+
 inline int msb(ll x) { return x ? 63 - __builtin_clzll((ull) x) : -1; } // старший 1-бит (нумерация с нуля)
 inline int lsb(ll x) { return x ? __builtin_ctzll((ull) x) : -1; } // младший 1-бит (нумерация с нуля)
 
-const int MOD = 1e9 + 7;
-const int INF = 0x3f3f3f3f;
-const ll LINF = 0x3f3f3f3f3f3f3f3fLL;
+constexpr int MOD = 1'000'000'007;
+constexpr int INF = 0x3f3f3f3f;
+constexpr ll LINF = 0x3f3f3f3f3f3f3f3fLL;
 const ld PI = acos(-1.0L);
-const ld EPS = 1e-9;
+constexpr ld EPS = 1e-9L;
 
-template<typename T, typename K> inline T modpow(T a, K e) {
+template<class T, class K, class Mul> inline T binpow_apply(T& a, K& e, Mul multiply) {
     T r = 1;
-    for (; e; e >>= 1, a = (ull) a * a % MOD)
-        if (e & 1) r = (ull) r * a % MOD;
+    for (; e > 1; e >>= 1) {
+        if (e & 1) r = multiply(r, a);
+        a = multiply(a, a);
+    }
+    r = multiply(r, a);
     return r;
 }
-template<typename T, typename K> inline T binpow(T a, K e) {
-    T r = 1;
-    for (; e; e >>= 1, a = a * a)
-        if (e & 1) r = r * a;
-    return r;
+template<class T, class K> inline T binpow(T a, K e) {
+    assert(e >= 0);
+    if (!(e > 0)) return 1;
+    return binpow_apply(a, e, multiplies<>{});
+}
+template<class T = remove_cv_t<decltype(MOD)>, class A, class K> inline T modpow(A a, K e, T mod = MOD) {
+    static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
+    assert(e >= 0 && mod > 0);
+    if (mod == 1 || !(e > 0)) return mod != 1;
+    using Common = common_type_t<A, T>;
+    using Remainder = conditional_t<is_signed_v<A> && is_unsigned_v<Common>, i128, Common>;
+    Remainder remainder = (Remainder) a % mod;
+    if (remainder < 0) remainder += mod;
+    T base = (T) remainder;
+    return binpow_apply(base, e, [m = (ull) mod](T x, T y) -> T {
+        if (m <= (1ULL << 32)) return (T) ((ull) x * y % m);
+        return (T) ((__uint128_t) x * y % m);
+    });
 }
 
 void solve();
@@ -79,7 +140,7 @@ public:
         array<int, alphabet> to;
         int link = -1;
         int len = 0;
-        int first_pos = -1;
+        int end_cnt = 0;
 
         int& operator[](char c) { return to[c - min_char]; }
         int operator[](char c) const { return to[c - min_char]; }
@@ -89,72 +150,55 @@ public:
 
     int last = 0;
     bool endpos_built = false;
-    bool kth_duplicates = false;
     vector<Node> nodes;
-    vi cnt, ord;
-    vll ways;
+    vi cnt;
 
     SuffAuto(size_t max_len = 0) { clear(max_len); }
 
     void clear(size_t max_len = 0) {
         last = 0;
         endpos_built = false;
-        kth_duplicates = false;
         nodes.clear();
         cnt.clear();
-        ord.clear();
-        ways.clear();
         if (max_len > 0) {
             nodes.reserve(2 * max_len);
             cnt.reserve(2 * max_len);
         }
         nodes.eb();
-        cnt.eb(0);
     }
 
     int extend(char c) {
-        if (endpos_built) {
-            // У исходных состояний first_pos равен len - 1, у клонов он больше.
-            cnt[0] = 0;
-            for (int v = 1; v < sz(nodes); ++v) {
-                cnt[v] = nodes[v].first_pos == nodes[v].len - 1;
-            }
-            endpos_built = false;
-        }
-        ord.clear();
-        ways.clear();
+        endpos_built = false;
 
-        // Обобщённый суффиксный автомат (GSAM)
-        // if (nodes[last][c] != -1) {
-            // int q = nodes[last][c];
-            // if (nodes[q].len == nodes[last].len + 1) {
-                // return last = q;
-            // }
-            // int clone = sz(nodes);
-            // nodes.eb(nodes[q]);
-            // cnt.eb(0);
-            // nodes[clone].len = nodes[last].len + 1;
-            // int u = last;
-            // while (u != -1 && nodes[u][c] == q) {
-                // nodes[u][c] = clone;
-                // u = nodes[u].link;
-            // }
-            // nodes[q].link = clone;
-            // return last = clone;
-        // }
+        // GSAM
+        if (nodes[last][c] != -1) {
+            int q = nodes[last][c];
+            if (nodes[q].len == nodes[last].len + 1) {
+                ++nodes[q].end_cnt;
+                return last = q;
+            }
+            int clone = sz(nodes);
+            nodes.eb(nodes[q]);
+            nodes[clone].len = nodes[last].len + 1;
+            nodes[clone].end_cnt = 1;
+            int u = last;
+            while (u != -1 && nodes[u][c] == q) {
+                nodes[u][c] = clone;
+                u = nodes[u].link;
+            }
+            nodes[q].link = clone;
+            return last = clone;
+        }
 
         int cur = sz(nodes);
         nodes.eb();
-        cnt.eb(1);
         nodes[cur].len = nodes[last].len + 1;
-        nodes[cur].first_pos = nodes[cur].len - 1;
-
+        nodes[cur].end_cnt = 1;
         int u = last;
         while (u != -1 && nodes[u][c] == -1) {
             nodes[u][c] = cur;
             u = nodes[u].link;
         }
-
         if (u == -1) {
             nodes[cur].link = 0;
         } else {
@@ -164,8 +208,8 @@ public:
             } else {
                 int clone = sz(nodes);
                 nodes.eb(nodes[v]);
-                cnt.eb(0);
                 nodes[clone].len = nodes[u].len + 1;
+                nodes[clone].end_cnt = 0;
                 while (u != -1 && nodes[u][c] == v) {
                     nodes[u][c] = clone;
                     u = nodes[u].link;
@@ -178,15 +222,15 @@ public:
     }
 
     void build(string_view s) {
+        // last = 0; // для GSAM
         for (char c: s) {
             extend(c);
         }
     }
 
-    void topo_sort() {
-        int n = nodes[last].len;
-        // int n = 0;
-        // for (const auto& node: nodes) n = max(n, node.len); // совместимо с обобщённым суффиксным автоматом
+    vi topo_sort() const {
+        int n = 0;
+        for (const auto& node: nodes) n = max(n, node.len);
         vi cnt_len(n + 1, 0);
         for (const auto& i: nodes) {
             cnt_len[i.len]++;
@@ -194,15 +238,20 @@ public:
         for (int i = 1; i <= n; ++i) {
             cnt_len[i] += cnt_len[i - 1];
         }
-        ord.assign(sz(nodes), 0);
+        vi ord(sz(nodes));
         for (int i = sz(nodes) - 1; i >= 0; --i) {
             ord[--cnt_len[nodes[i].len]] = i;
         }
+        return ord;
     }
 
     void build_endpos() {
         if (endpos_built) return;
-        if (ord.empty()) topo_sort();
+        const vi ord = topo_sort();
+        cnt.resize(sz(nodes));
+        for (int v = 0; v < sz(nodes); ++v) {
+            cnt[v] = nodes[v].end_cnt;
+        }
         for (int i = sz(nodes) - 1; i >= 0; --i) {
             int v = ord[i];
             if (nodes[v].link != -1) {
@@ -229,58 +278,9 @@ public:
         return v == -1 ? 0 : cnt[v];
     }
 
-    int first_occ(string_view s) const {
-        int v = get_state(s);
-        return v == -1 ? -1 : nodes[v].first_pos - sz(s) + 1;
-    }
-
-    void prepare_kth(bool duplicates = false) {
-        kth_duplicates = duplicates;
-        if (duplicates && !endpos_built) build_endpos();
-        if (ord.empty()) topo_sort();
-        ways.assign(sz(nodes), 0);
-        for (int i = sz(nodes) - 1; i >= 0; --i) {
-            int u = ord[i];
-            if (u != 0) {
-                ways[u] = duplicates ? cnt[u] : 1;
-            }
-            for (size_t c = 0; c < alphabet; ++c) {
-                int v = nodes[u].to[c];
-                if (v != -1) {
-                    ways[u] += ways[v];
-                }
-            }
-        }
-    }
-
-    string kth_substr(ll k) const {
-        assert(k > 0 && !ways.empty());
-        if (k > ways[0]) return "";
-        string res;
-        int u = 0;
-        while (k > 0) {
-            for (size_t c = 0; c < alphabet; ++c) {
-                int v = nodes[u].to[c];
-                if (v == -1) continue;
-                if (k <= ways[v]) {
-                    u = v;
-                    res += static_cast<char>(min_char + c);
-                    ll cur = kth_duplicates ? cnt[u] : 1;
-                    if (k <= cur) return res;
-                    k -= cur;
-                    break;
-                } else {
-                    k -= ways[v];
-                }
-            }
-        }
-        return res;
-    }
-
     int size() const { return sz(nodes); }
 
     const Node& operator[](int v) const { return nodes[v]; }
-
     Node& operator[](int v) { return nodes[v]; }
 
     vector<vi> link_tree() const {

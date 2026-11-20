@@ -4,11 +4,11 @@
 #define nn '\n'
 #define all(x) (x).begin(), (x).end()
 #define rall(x) (x).rbegin(), (x).rend()
-#define sz(x) ((int)(x).size())
-#define rep(i,a,b) for(int i=(a);i<(b);++i)
-#define rrep(i,a,b) for(int i=(a);i>(b);--i)
-#define each(x,a) for(auto& x:a)
-#define each2(x,y,a) for(auto& [x,y]:a)
+#define sz(x) ((int) (x).size())
+#define rep(i, a, b) for (int i = (a); i < (b); ++i)
+#define rrep(i, a, b) for (int i = (a); i > (b); --i)
+#define each(x, a) for (auto& x: a)
+#define each2(x, y, a) for (auto& [x, y]: a)
 #define fi first
 #define se second
 #define pb push_back
@@ -54,7 +54,10 @@ template<class T, class U> inline bool chmax(T& a, const U& b) {
 
 #ifdef LOCAL
 namespace debug_detail {
-    template<class T> ostream& print(const T& value) { cerr << value; return cerr; }
+    template<class T> ostream& print(const T& value) {
+        cerr << value;
+        return cerr;
+    }
     template<class T> ostream& print(const vector<T>& values);
     template<class A, class B> ostream& print(const pair<A, B>& p) {
         cerr << '(';
@@ -106,12 +109,10 @@ template<class T = remove_cv_t<decltype(MOD)>, class A, class K> inline T modpow
     static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
     assert(e >= 0 && mod > 0);
     if (mod == 1 || !(e > 0)) return mod != 1;
-
     using Common = common_type_t<A, T>;
     using Remainder = conditional_t<is_signed_v<A> && is_unsigned_v<Common>, i128, Common>;
     Remainder remainder = (Remainder) a % mod;
     if (remainder < 0) remainder += mod;
-
     T base = (T) remainder;
     return binpow_apply(base, e, [m = (ull) mod](T x, T y) -> T {
         if (m <= (1ULL << 32)) return (T) ((ull) x * y % m);
