@@ -153,13 +153,15 @@ struct ImplSegtree {
 
     int query(int l, int r) const { return seg_pool ? seg_pool->query(root, l, r) : 0; }
 
-    void merge(const ImplSegtree& other) {
-        if (seg_pool && other.seg_pool) {
-            root = seg_pool->merge(root, other.root);
-        } else if (other.seg_pool) {
-            seg_pool = other.seg_pool;
-            root = other.root;
-        }
+    bool merge(ImplSegtree&& other) {
+        if (this == &other) return false;
+        if (!other.seg_pool) return true;
+        if (seg_pool && seg_pool != other.seg_pool) return false;
+
+        if (!seg_pool) seg_pool = other.seg_pool;
+        root = seg_pool->merge(root, other.root);
+        other.root = 0;
+        return true;
     }
 };
 

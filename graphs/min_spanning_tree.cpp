@@ -131,13 +131,14 @@ ll kruskal(int n, span<array<int, 3>> edges) {
     return total;
 }
 
-ll prim(span<vector<pii>> graph) {
-    vi min_edge(sz(graph), INF);
+template<typename T>
+common_type_t<T, ll> prim(span<vector<pair<int, T>>> graph) {
+    vector<T> min_edge(sz(graph), numeric_limits<T>::max());
     // vi parent(sz(graph), -1);
     // vector<pii> mst_edges;
     vector<bool> used(sz(graph), false);
-    priority_queue<pii, vector<pii>, greater<>> q;
-    ll total = 0;
+    priority_queue<pair<T, int>, vector<pair<T, int>>, greater<>> q;
+    common_type_t<T, ll> total = 0;
     int count = 0;
     min_edge[0] = 0;
     q.emplace(0, 0);
@@ -163,13 +164,17 @@ ll prim(span<vector<pii>> graph) {
     return total;
 }
 
-ll prim_v2(span<vector<pii>> graph) {
+ll prim(span<vector<pii>> graph) { return prim<int>(graph); }
+
+template<typename T>
+common_type_t<T, ll> prim_v2(span<vector<pair<int, T>>> graph) {
     int n = sz(graph);
-    vi min_edge(n, INF);
+    const T inf = numeric_limits<T>::max();
+    vector<T> min_edge(n, inf);
     // vi parent(n, -1);
     // vector<pii> mst_edges;
     vector<bool> used(n, false);
-    ll total = 0;
+    common_type_t<T, ll> total = 0;
     min_edge[0] = 0;
     for (int i = 0; i < n; ++i) {
         int v = -1;
@@ -178,7 +183,7 @@ ll prim_v2(span<vector<pii>> graph) {
                 v = j;
             }
         }
-        if (min_edge[v] == INF) {
+        if (min_edge[v] == inf) {
             return -1;
         }
         used[v] = true;
@@ -195,6 +200,8 @@ ll prim_v2(span<vector<pii>> graph) {
     }
     return total;
 }
+
+ll prim_v2(span<vector<pii>> graph) { return prim_v2<int>(graph); }
 
 ll boruvka(int n, span<array<int, 3>> edges) {
     int comps = n;

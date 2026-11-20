@@ -187,6 +187,12 @@ namespace SLAE {
 
     // Система по модулю MOD: a[n][m + 1]
     int gauss_mod(vector<vi> a, vi& ans) {
+        for (auto& coefficients: a) {
+            for (int& x: coefficients) {
+                x %= MOD;
+                if (x < 0) x += MOD;
+            }
+        }
         int n = sz(a), m = sz(a[0]) - 1, row = 0;
         vi where(m, -1);
         for (int col = 0; col < m && row < n; ++col) {

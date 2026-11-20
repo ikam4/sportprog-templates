@@ -263,7 +263,7 @@ public:
     }
 
     ull upper_bound(ull val) const {
-        if (bits < 64 && val >= ((1ULL << bits) - 1)) return -1ULL;
+        if (val == numeric_limits<ull>::max()) return -1ULL;
         int idx = order_of_key(val + 1);
         return (idx < size()) ? kth(idx) : -1ULL;
     }

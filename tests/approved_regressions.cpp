@@ -50,11 +50,6 @@ namespace sequence_example {
 }
 #pragma GCC pop_options
 #pragma GCC push_options
-namespace exam_example {
-#include "../templates/exam_2sem.cpp"
-}
-#pragma GCC pop_options
-#pragma GCC push_options
 namespace hld_example {
 #include "../graphs/heavy_light.cpp"
 }
@@ -119,6 +114,15 @@ namespace sparse_example {
 #include "../data_structures/sparse_table.cpp"
 }
 #pragma GCC pop_options
+namespace aho_example {
+#include "../strings/aho_corasick.cpp"
+}
+namespace suffix_automaton_example {
+#include "../strings/suffix_automat.cpp"
+}
+namespace dinic_example {
+#include "../graphs/dinic.cpp"
+}
 #undef main
 
 using namespace std;
@@ -183,6 +187,13 @@ template<class T> void test_treap_copy() {
     }
 }
 
+void test_bounded_knapsack() {
+    using sequence_example::knap_lim_fast;
+    check(knap_lim_fast({0, 0}, {5, -9}, {3, 2}, 0) == 15, "bounded knapsack with zero capacity and free items");
+    check(knap_lim_fast({0, 2, INT_MAX}, {5, 7, 100}, {3, 2, 1}, 4) == 29,
+          "bounded knapsack mixes free items with ordinary and overweight items");
+}
+
 void test_lcis() {
     vi a={1,2,3,4,5,0,1,2,3}, b={0,1,2,3,4,5};
     auto s=sequence_example::lcis(a,b);
@@ -201,6 +212,76 @@ void test_lcis() {
     }
 }
 
+void test_extended_template() {
+    using modint_example::i128;
+    using modint_example::operator>>;
+    using modint_example::operator<<;
+    constexpr i128 half = i128(1) << 126;
+    constexpr i128 low = -half - half;
+    constexpr i128 high = half + (half - 1);
+    const string low_text = "-170141183460469231731687303715884105728";
+    const string high_text = "170141183460469231731687303715884105727";
+    vector<pair<i128, i128>> limits(1);
+    istringstream input(low_text + " +" + high_text);
+    ostringstream output;
+    input >> limits;
+    output << limits;
+    check(input && limits[0] == pair<i128, i128>{low, high} && output.str() == low_text + ' ' + high_text + '\n',
+          "extended template streams full i128 range");
+    i128 value = 42;
+    for (const char* token: {"+", "12x", "170141183460469231731687303715884105728", "-170141183460469231731687303715884105729"}) {
+        istringstream bad(token);
+        check(!(bad >> value) && value == 42, "invalid i128 input keeps the destination");
+    }
+
+    modint_example::mint mint_value = 7;
+    istringstream empty;
+    check(!(empty >> mint_value) && mint_value.v == 7, "failed ModInt input keeps the destination");
+    pair<vector<int>, pair<vector<int>, int>> nested{{0, 0}, {{0, 0}, 0}};
+    istringstream nested_input("1 0 3 4 5");
+    ostringstream nested_output;
+    nested_input >> nested;
+    nested_output << nested;
+    check(nested_input && nested_output.str() == "1 0\n 3 4\n 5", "nested vector and pair streams");
+
+    constexpr unsigned long long wide_mod = ULLONG_MAX - 58;
+    using WideMint = modint_example::ModInt<unsigned long long, wide_mod>;
+    const WideMint minus_one = wide_mod - 1;
+    check((minus_one * minus_one).v == 1 && WideMint::inv(minus_one) == minus_one,
+          "ModInt multiplication and inverse for an unsigned 64-bit modulus");
+    istringstream wide_input("18446744073709551615 -18446744073709551615");
+    WideMint positive, negative;
+    check(bool(wide_input >> positive >> negative) && positive.v == 58 && negative.v == wide_mod - 58,
+          "ModInt reads positive and negative unsigned 64-bit magnitudes");
+    using Composite = modint_example::ModInt<int, 12>;
+    auto inverse = Composite::try_inv(5);
+    check(inverse && inverse->v == 5 && (Composite(7) / 5).v == 11,
+          "ModInt inverse and division work for coprime residues modulo a composite");
+    check(!Composite::try_inv(6) && !Composite::try_inv(0), "ModInt rejects noninvertible residues");
+    check(modint_example::invmod(-3, 10) == 3 && !modint_example::invmod(6, 12), "general modular inverse");
+    check(modint_example::invmod(LLONG_MIN, LLONG_MAX) == LLONG_MAX - 1, "64-bit inverse at signed limits");
+    check(number_example::invmod(3, 10) == 7 && number_example::modpow(2, 63, LLONG_MAX) == 1,
+          "number theory exposes the synchronized modular helpers");
+    static_assert(is_same_v<decltype(number_example::modpow(2LL, 3)), int>);
+    static_assert(is_same_v<decltype(number_example::modpow(2, 3, 7LL)), ll>);
+    static_assert(is_same_v<decltype(number_example::modpow(2, 3, 7ULL)), unsigned long long>);
+    check(number_example::modpow(-2, 3) == number_example::MOD - 8
+          && number_example::modpow(2, 40, 10'000'000'000LL) == 9'511'627'776LL,
+          "modpow handles default int and explicit long long moduli");
+    check(number_example::modpow(-2, 3, ULLONG_MAX) == ULLONG_MAX - 8
+          && number_example::modpow(ULLONG_MAX - 1, 2, ULLONG_MAX) == 1,
+          "modpow handles signed bases and products with unsigned 64-bit moduli");
+    check(number_example::Comb<7>(6).binomial(6, 3) == 6 && Composite::pow(5, 3).v == 5,
+          "combinatorics and ModInt reuse the power helpers");
+    ll x, y;
+    check(number_example::extgcd(LLONG_MIN, -1, x, y) == 1 && (i128) LLONG_MIN * x - y == 1,
+          "extended gcd handles a minimum long long operand");
+
+    modint_example::hash_map<long, ll> weights;
+    weights[1L] = 42;
+    check(weights[1L] == 42 && weights.find(2L) == weights.end(), "hash map accepts long keys");
+}
+
 void test_modint_gauss() {
     check(modint_example::mint((__int128)-3).v==1000000004, "signed int128 ModInt");
     check(lowlink_example::mint((__int128)-3).v==1000000004, "copied ModInt in bridges");
@@ -217,6 +298,10 @@ void test_modint_gauss() {
     check(gauss_example::SLAE::gauss_mod({{1,2,5},{1,1,3}},ans)==1 && ans==vi({1,2}), "modular subtraction regression");
     check(gauss_example::SLAE::gauss_mod({{1,1,3},{2,2,6}},ans)==2,"modular free variables");
     check(gauss_example::SLAE::gauss_mod({{1,1,3},{2,2,7}},ans)==0,"modular inconsistency");
+    constexpr int mod = gauss_example::MOD;
+    check(gauss_example::SLAE::gauss_mod({{-1, 1}}, ans) == 1 && ans == vi{mod - 1}, "modular negative coefficient");
+    check(gauss_example::SLAE::gauss_mod({{mod, 1}}, ans) == 0, "modular zero pivot with nonzero right side");
+    check(gauss_example::SLAE::gauss_mod({{mod, -mod}}, ans) == 2, "modular zero row after normalization");
 }
 
 void test_pool_and_bits() {
@@ -234,6 +319,9 @@ void test_pool_and_bits() {
     }
     bit_example::BitTrie<64> b64;b64.insert(0);b64.insert(~0ULL);
     check(b64.order_of_key(~0ULL)==1 && b64.count_xor_less(0,~0ULL)==1,"64-bit boundaries");
+    b64.insert(42);
+    check(b64.upper_bound(0) == 42 && b64.upper_bound(~0ULL) == ~0ULL, "64-bit upper bound at maximum");
+    check(bt.upper_bound(5) == 31 && bt.upper_bound(31) == ~0ULL, "bounded-width upper bound");
 }
 
 template<class Sat> void test_sat_copy() {
@@ -250,38 +338,46 @@ struct ModelSegtree {
 };
 void test_zero_based() {
     dsu_example::RollbackDSU d(4);check(d.parent.size()==4&&d.comps==4,"rollback domain");
-    int mark=d.snapshot();d.union_sets(0,3);d.union_sets(0,1);
+    int mark=d.snapshot();d.union_sets(0,3);
+    int after_first=d.snapshot();d.union_sets(0,1);
     check(d.comps==2 && d.find_set(0)==d.find_set(3),"rollback zero vertex");
+    auto copy=d;
+    copy.rollback(after_first);
+    check(copy.comps==3&&copy.find_set(0)!=copy.find_set(1)&&copy.size[copy.find_set(0)]==2,"rollback copy restores its state");
+    check(d.comps==2&&d.find_set(0)==d.find_set(1)&&d.size[d.find_set(0)]==3,"rollback copy preserves original");
     d.rollback(mark);check(d.comps==4&&d.find_set(0)!=d.find_set(3),"rollback restoration");
     vector<vi> g={{1},{0,2},{1}},one(1),empty;
     hld_example::HLD<ModelSegtree> h(0,g,{4,5,6});
-    exam_example::HLD<ModelSegtree> eh(0,g,{4,5,6});
-    check(h.query(0,2)==15&&eh.query(0,2)==15,"HLD includes vertex zero");
-    h.update(0,2,2);eh.update(0,2,2);
-    check(h.query(0,2)==21&&eh.query(0,2)==21,"HLD update with zero-based positions");
+    check(h.query(0,2)==15,"HLD includes vertex zero");
+    h.update(0,2,2);
+    check(h.query(0,2)==21,"HLD update with zero-based positions");
     centroid_example::centroid_decomp c(one),ce(empty);
-    exam_example::centroid_decomp ec(one),ece(empty);
-    check(c.used[0]&&ec.used[0],"centroid single vertex zero");
+    check(c.used[0],"centroid single vertex zero");
     vector<vector<pair<int,int>>> one_with_ids(1);
     lowlink_example::bridges::solve(one_with_ids);lowlink_example::dots::solve(one_with_ids);
-    exam_example::bridges::solve(one_with_ids);exam_example::dots::solve(one_with_ids);
     vector<vi> dg={{},{2},{1}},rg=dg;
     auto [dag,comp]=scc_example::scc::solve(dg,rg);
-    auto [edag,ecomp]=exam_example::scc::solve(dg,rg);
     check(comp[0]>=0&&comp[1]==comp[2]&&comp[0]!=comp[1],"SCC isolated zero");
-    check(ecomp[0]>=0&&ecomp[1]==ecomp[2]&&ecomp[0]!=ecomp[1],"copied SCC isolated zero");
     vector<array<int,3>> edges={{0,1,2},{1,2,-3},{0,2,5}};
     vector<vector<pair<int,int>>> wg={{{1,2},{2,5}},{{0,2},{2,-3}},{{1,-3},{0,5}}};
     check(mst_example::kruskal(3,edges)==-1 && mst_example::boruvka(3,edges)==-1 && mst_example::prim(wg)==-1 && mst_example::prim_v2(wg)==-1,"zero-based thematic MST");
-    check(exam_example::MST::kruskal(3,edges)==-1 && exam_example::MST::boruvka(3,edges)==-1 && exam_example::MST::prim(3,wg)==-1,"zero-based copied MST");
     wg.assign(1,{});edges.clear();
-    check(exam_example::MST::prim(1,wg)==0&&mst_example::boruvka(1,edges)==0,"MST single vertex zero");
+    check(mst_example::prim(wg)==0&&mst_example::boruvka(1,edges)==0,"MST single vertex zero");
+    vector<vector<pair<int, ll>>> wide_weights{
+        {{1, 3'000'000'000LL}}, {{0, 3'000'000'000LL}, {2, 4'000'000'000LL}}, {{1, 4'000'000'000LL}}
+    };
+    check(mst_example::prim<ll>(wide_weights) == 7'000'000'000LL
+          && mst_example::prim_v2<ll>(wide_weights) == 7'000'000'000LL, "Prim with long long weights");
     check(run_io("3 2\n0 1\n1 2\n",[]{topo_example::solve();})=="0 1 2 ","zero-based topo example");
     for(int i=0;i<2;++i) {
-        check(run_io("3 2\n0 1\n1 2\n",[]{euler_example::solve();})=="012","zero-based Euler example and state reset");
-        check(run_io("3 3\n0 1\n1 2\n2 0\n",[]{euler_example::solve2();})=="0120","zero-based directed Euler example");
+        check(run_io("3 2\n0 1\n1 2\n",[]{euler_example::solve();})=="0 1 2\n","zero-based Euler example and state reset");
+        check(run_io("3 3\n0 1\n1 2\n2 0\n",[]{euler_example::solve2();})=="0 1 2 0\n","zero-based directed Euler example");
     }
-    check(run_io("1 0\n",[]{euler_example::solve();})=="0","Euler without edges");
+    check(run_io("1 0\n",[]{euler_example::solve();})=="0\n","Euler without edges");
+    check(run_io("4 3\n0 1\n0 2\n0 3\n",[]{euler_example::solve();})=="-1","Euler rejects four odd vertices");
+    const string euler_path = "12 2\n9 10\n10 11\n";
+    check(run_io(euler_path, euler_example::solve) == "9 10 11\n", "Euler separates multi-digit vertices");
+    check(run_io(euler_path, euler_example::solve2) == "9 10 11\n", "directed Euler separates multi-digit vertices");
 }
 
 void test_wide_segment_values() {
@@ -296,6 +392,17 @@ void test_wide_segment_values() {
     check(minimum.get(0,1)==3*big-1000000000&&minimum.get(0,0)==3*big+1000000000,"wide lazy minimum and neutral value");
     min_tree_example::min_segtree min_int(vi{2,1}),zeros(3);
     check(min_int.get(0,1)==1&&zeros.get(0,2)==0,"minimum constructors preserved");
+    min_tree_example::min_segtree min_empty(vi{}), zero_length(0);
+    min_empty.update(0, 0, 5);
+    zero_length.update(0, 0, 5);
+    check(min_empty.get(0, 0) == LLONG_MAX && zero_length.get(0, 0) == LLONG_MAX,
+          "empty minimum trees return the neutral element");
+    min_tree_example::min_segtree max_values(vi{0, 0});
+    max_values.update(0, 1, LLONG_MAX);
+    check(max_values.get(0, 0) == LLONG_MAX, "minimum retains the largest long long value");
+    max_values.update(0, 0, -1);
+    check(max_values.get(0, 1) == LLONG_MAX - 1 && max_values.get(1, 1) == LLONG_MAX,
+          "partial updates and queries near the long long limit");
     for(int z=0;z<40;++z){
         int n=1+ri(20);vi initial(n);
         for(int& x:initial)x=(ri(2001)-1000)*1000000;
@@ -314,19 +421,39 @@ void test_wide_segment_values() {
     }
     point_pool_example::ImplSegtreePool pool(16);
     point_pool_example::ImplSegtree left(pool),right(&pool);
-    left.update(0,300);right.update(15,-100);left.merge(right);
+    left.update(0,300);right.update(15,-100);
+    check(left.merge(std::move(right)), "point merge in the same pool");
     check(left.query(0,15)==200&&left.query(0,0)==300,"int implicit point wrapper and merge");
+    right.update(15, 1);
+    check(left.query(15, 15) == -100 && right.query(15, 15) == 1, "point donor can be reused after merge");
+    point_pool_example::ImplSegtreePool other_pool(16);
+    point_pool_example::ImplSegtree foreign(other_pool);
+    foreign.update(0, 7);
+    check(!left.merge(std::move(foreign)) && left.query(0, 15) == 200 && foreign.query(0, 0) == 7,
+          "point merge rejects different pools");
+    check(!left.merge(std::move(left)) && left.query(0, 15) == 200, "point merge rejects self merge");
+
     pool_example::ImplSegtreePool lazy_pool(16);
     pool_example::ImplSegtree lazy(lazy_pool);
     lazy.update(0,15,big);lazy.update_point(0,2*big);
     auto high=lazy.split(8);
     check(lazy.query(0,15)==10*big&&high.query(0,15)==8*big,"lazy wrapper split with default reserve");
+    check(lazy.merge(std::move(high)), "lazy merge in the same pool");
+    high.update(8, 15, 2 * big);
+    check(lazy.query(0, 15) == 18 * big && lazy.query(8, 15) == 8 * big && high.query(8, 15) == 16 * big,
+          "lazy donor can be reused after merge");
+    pool_example::ImplSegtreePool other_lazy_pool(16);
+    pool_example::ImplSegtree foreign_lazy(other_lazy_pool);
+    foreign_lazy.update_point(0, 7);
+    check(!lazy.merge(std::move(foreign_lazy)) && lazy.query(0, 15) == 18 * big && foreign_lazy.query(0, 0) == 7,
+          "lazy merge rejects different pools");
+    check(!lazy.merge(std::move(lazy)) && lazy.query(0, 15) == 18 * big, "lazy merge rejects self merge");
+
     vector<vi> graph={{1},{0,2},{1}};vi values(3,1000000000);
     hld_example::HLD<ModelSegtree> h(0,graph,values);
-    exam_example::HLD<ModelSegtree> eh(0,graph,values);
-    check(h.query(0,2)==3000000000LL&&eh.query(0,2)==3000000000LL,"64-bit HLD result in both copies");
-    h.update(0,2,1000000000);eh.update(0,2,1000000000);
-    check(h.query(0,2)==6000000000LL&&eh.query(0,2)==6000000000LL,"HLD keeps int updates and wide sums");
+    check(h.query(0,2)==3000000000LL,"64-bit HLD result");
+    h.update(0,2,1000000000);
+    check(h.query(0,2)==6000000000LL,"HLD keeps int updates and wide sums");
 }
 
 int component_count(int n,const vector<pair<int,int>>& edges,int removed_edge=-1,int removed_vertex=-1) {
@@ -371,14 +498,24 @@ void test_floyd_and_factor() {
     check(saturated.cycle&&saturated.dp[0][0]>=-negative_example::LINF,"Floyd negative-cycle saturation");
     check(saturated.get_path(0,0).empty(),"Floyd does not restore through negative cycles");
     check(run_io("",[&]{negative_example::floyd_example(70,matrix);})=="Negative cycle found\n","Floyd diagnostic example retained");
-    vector<vector<pair<int,ll>>> g(70);
-    for(int i=0;i<70;++i)for(int j=0;j<70;++j)g[i].push_back({j,-1});
-    check(exam_example::shortest_path_neg::floyd_yorshell<ll>(70,g).empty(),"copied Floyd saturation");
-    for(ll n:{1LL,-1LL,360LL,-360LL,9223372036854775807LL}) {
+    for(ll n:{1LL,-1LL,360LL,-360LL,LLONG_MIN,LLONG_MAX}) {
         auto f=number_example::factor(n);__int128 product=1;
         for(auto [p,e]:f)while(e--)product*=p;
         check(product==(n<0?-(__int128)n:(__int128)n),"factor reconstruction");
     }
+}
+
+void test_number_theory() {
+    check(number_example::sieve(-2).empty() && number_example::phi_sieve(-2).empty(), "empty number theory tables");
+    number_example::SPF spf(100);
+    check(spf.is_prime(97) && !spf.is_prime(100) && !spf.is_prime(101), "SPF primality bounds");
+    check(spf.factor(1).empty() && spf.factor(84) == vector<pair<int, int>>{{2, 2}, {3, 1}, {7, 1}},
+          "SPF factors with multiplicity");
+    check(number_example::phi(84) == 24 && number_example::phi_sieve(84)[84] == 24, "Euler's totient");
+    check(number_example::divisors(36) == vector<ll>{1, 2, 3, 4, 6, 9, 12, 18, 36}, "sorted distinct divisors");
+    number_example::Comb<4294967291LL> comb(10);
+    check(comb.binomial(10, 4) == 210 && comb.binomial(0, 0) == 1 && comb.binomial(4, 5) == 0,
+          "combinations with a modulus larger than INT_MAX");
 }
 
 template<class T> void test_centroid_parents() {
@@ -548,24 +685,96 @@ void test_sparse_and_topo_interfaces() {
     }
 }
 
+void test_string_automata() {
+    aho_example::AhoCorasick<> aho;
+    int a = aho.insert("a", 10);
+    int duplicate = aho.insert("a", 20);
+    int ba = aho.insert("ba", 30);
+    aho.build();
+    check(aho.insert("x", 40) == -1, "Aho rejects insertion after build");
+    aho.build();
+    check(aho.find_all("ba") == vector<pair<int, int>>{{1, 30}, {1, 10}, {1, 20}}, "Aho reports all duplicate IDs");
+    check(aho.count_all("ba") == 3 && aho.count_each("ba", {a, duplicate, ba}) == vector<ll>{1, 1, 1},
+          "Aho counts duplicate patterns after repeated build");
+    aho.clear();
+    aho.insert("a", 1);
+    aho.insert("a", 2);
+    aho.build();
+    check(aho.find_all("a") == vector<pair<int, int>>{{0, 1}, {0, 2}}, "Aho clear resets duplicate IDs");
+
+    suffix_automaton_example::SuffAuto<> suffix;
+    suffix.build("ab");
+    suffix.prepare_kth();
+    suffix.extend('b');
+    suffix.prepare_kth(true);
+    check(suffix.count_occs("b") == 2 && suffix.kth_substr(5) == "b" && suffix.kth_substr(6) == "bb",
+          "suffix automaton rebuilds order and ranks after extending");
+    suffix.extend('a');
+    suffix.build_endpos();
+    check(suffix.count_occs("a") == 2 && suffix.count_occs("b") == 2 && suffix.count_occs("bb") == 1,
+          "suffix automaton recounts original and clone states after extending");
+}
+
+void test_dinic() {
+    using dinic_example::Dinic;
+    const vector<vector<pair<int, int>>> reroute{
+        {{1, 1}, {2, 1}}, {{3, 1}, {4, 1}}, {{3, 1}}, {{5, 1}}, {{5, 1}}, {}
+    };
+    Dinic<int> directed(reroute);
+    check(directed.maxflow(0, 5) == 2, "Dinic uses residual reverse edges");
+
+    const vector<vector<pair<int, ll>>> undirected{{{1, 3}, {1, 4}}, {{0, 3}, {0, 4}}};
+    Dinic<ll> pair_graph(undirected, false);
+    check(pair_graph.maxflow(1, 0) == 7, "Dinic undirected parallel edges");
+    const auto residual = pair_graph.edges;
+    check(pair_graph.maxflow(1, 1) == 0, "Dinic equal terminals");
+    check(pair_graph.edges == residual, "Dinic equal terminals preserve residual capacities");
+    check(pair_graph.maxflow(1, 0) == 0, "Dinic keeps the residual network");
+    pair_graph.add_edge(1, 0, 5);
+    check(pair_graph.maxflow(1, 0) == 5, "Dinic can augment after adding edges");
+
+    const vector<vector<pair<int, ll>>> wide_graph{{{1, LLONG_MAX}}, {}};
+    Dinic<ll> wide(wide_graph);
+    check(wide.maxflow(0, 1) == LLONG_MAX, "Dinic accepts the largest representable flow");
+
+    for (int test = 0; test < 500; ++test) {
+        int n = 2 + ri(6), m = ri(25);
+        vector<vector<pair<int, int>>> graph(n);
+        for (int i = 0; i < m; ++i) {
+            int u = ri(n), v = ri(n), cap = ri(9);
+            graph[u].emplace_back(v, cap);
+        }
+        int min_cut = INT_MAX;
+        for (int mask = 1; mask < (1 << (n - 1)); mask += 2) {
+            int cut = 0;
+            for (int u = 0; u < n; ++u) {
+                if ((mask & (1 << u)) == 0) continue;
+                for (auto [v, cap]: graph[u]) {
+                    if ((mask & (1 << v)) == 0) cut += cap;
+                }
+            }
+            min_cut = min(min_cut, cut);
+        }
+        Dinic<int> dinic(graph);
+        check(dinic.maxflow(0, n - 1) == min_cut, "Dinic flow versus exhaustive min cut");
+    }
+}
+
 int main() {
     test_treap_copy<treap_example::ImplTreap>();
-    test_treap_copy<exam_example::ImplTreap>();
-    test_lcis();test_modint_gauss();test_pool_and_bits();
-    test_sat_copy<sat_example::TWO_SAT>();test_sat_copy<exam_example::TWO_SAT>();
-    test_zero_based();test_floyd_and_factor();
+    test_bounded_knapsack();
+    test_lcis();test_extended_template();test_modint_gauss();test_pool_and_bits();
+    test_sat_copy<sat_example::TWO_SAT>();
+    test_zero_based();test_floyd_and_factor();test_number_theory();
     test_wide_segment_values();
     test_multigraph_copy<lowlink_example::bridges::dfs,lowlink_example::dots::dfs,
                          lowlink_example::bridges::solve,lowlink_example::dots::solve>();
-    test_multigraph_copy<exam_example::bridges::dfs,exam_example::dots::dfs,
-                         exam_example::bridges::solve,exam_example::dots::solve>();
     test_centroid_parents<centroid_example::centroid_decomp>();
-    test_centroid_parents<exam_example::centroid_decomp>();
     test_shortest_path_results();
     test_lca_copy<lca_example::LCA,lca_example::fast_LCA>();
-    test_lca_copy<exam_example::LCA,exam_example::fast_LCA>();
     test_concrete_hld_copy<hld_example::HLD,hld_example::HldSegtree>();
-    test_concrete_hld_copy<exam_example::HLD,exam_example::HldSegtree>();
     test_sparse_and_topo_interfaces();
+    test_string_automata();
+    test_dinic();
     cout<<"Approved regression tests passed\n";
 }

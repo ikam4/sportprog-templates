@@ -114,6 +114,11 @@ void solve() {
     // алгос по сути тут такой же, просто надо еще обратные ребра добавить, короче разобьем и
     // проверим, что есть только 1 компонента с ребрами
 
+    if (ranges::count_if(deg, [](int d) { return d % 2 != 0; }) > 2) {
+        cout << -1;
+        return;
+    }
+
     int start_node = -1;
     for (int i = 0; i < n; ++i) {
         if (start_node == -1 && deg[i] % 2 == 0 && deg[i] > 0) {
@@ -136,7 +141,7 @@ void solve() {
         cout << -1;
         return;
     }
-    each(x, ans) cout << x;
+    cout << ans;
 }
 
 void euler2(int v, auto& graph) {
@@ -207,5 +212,5 @@ void solve2() { // для ориент
         cout << -1;
         return;
     }
-    each(x, ans) cout << x;
+    cout << ans;
 }

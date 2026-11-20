@@ -1,6 +1,8 @@
-// Лучший шаблон
+// BEST TEMPLATE EVER by ikam
 #pragma GCC optimize("O3,unroll-loops")
+#ifdef FAST_X86
 #pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
+#endif
 #include <bits/stdc++.h>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
@@ -32,15 +34,135 @@ using vstr = vector<string>;
 using vll = vector<ll>;
 using i128 = __int128_t;
 
-template<class T>
-inline istream& operator>>(istream& in, vector<T>& a) {
+inline istream& operator>>(istream& in, i128& value) {
+    string token;
+    if (!(in >> token)) return in;
+    const bool negative = token[0] == '-';
+    size_t i = negative || token[0] == '+' ? 1 : 0;
+    if (i == token.size()) {
+        in.setstate(ios::failbit);
+        return in;
+    }
+    const __uint128_t limit = (__uint128_t(1) << 127) - 1 + negative;
+    const __uint128_t cutoff = limit / 10;
+    const unsigned last_digit = limit % 10;
+    __uint128_t magnitude = 0;
+    for (; i < token.size(); ++i) {
+        unsigned digit = token[i] - '0';
+        if (digit > 9 || magnitude > cutoff || (magnitude == cutoff && digit > last_digit)) {
+            in.setstate(ios::failbit);
+            return in;
+        }
+        magnitude = magnitude * 10 + digit;
+    }
+    value = negative && magnitude ? -1 - (i128) (magnitude - 1) : (i128) magnitude;
+    return in;
+}
+
+inline ostream& operator<<(ostream& out, i128 value) {
+    const bool negative = value < 0;
+    __uint128_t magnitude = (__uint128_t) value;
+    if (negative) magnitude = -magnitude;
+    char buffer[40];
+    char* end = buffer + sizeof(buffer);
+    char* first = end;
+    do {
+        *--first = char('0' + magnitude % 10);
+        magnitude /= 10;
+    } while (magnitude);
+    if (negative) *--first = '-';
+    return out << string_view(first, end - first);
+}
+
+template<class T> istream& operator>>(istream& in, vector<T>& a);
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a);
+template<class A, class B> istream& operator>>(istream& in, pair<A, B>& p) { return in >> p.fi >> p.se; }
+template<class A, class B> ostream& operator<<(ostream& out, const pair<A, B>& p) { return out << p.fi << ' ' << p.se; }
+template<class T> istream& operator>>(istream& in, vector<T>& a) {
     for (auto& x: a) in >> x;
     return in;
 }
-template<class T>
-inline ostream& operator<<(ostream& out, const vector<T>& a) {
+template<class T> ostream& operator<<(ostream& out, const vector<T>& a) {
     for (int i = 0; i < sz(a); ++i) out << a[i] << " \n"[i + 1 == sz(a)];
     return out;
+}
+
+template<class T, class U> inline bool chmin(T& a, const U& b) {
+    if (!(b < a)) return false;
+    a = b;
+    return true;
+}
+template<class T, class U> inline bool chmax(T& a, const U& b) {
+    if (!(a < b)) return false;
+    a = b;
+    return true;
+}
+
+#ifdef LOCAL
+namespace debug_detail {
+    template<class T> ostream& print(const T& value) { cerr << value; return cerr; }
+    template<class T> ostream& print(const vector<T>& values);
+    template<class A, class B> ostream& print(const pair<A, B>& p) {
+        cerr << '(';
+        print(p.fi) << ", ";
+        return print(p.se) << ')';
+    }
+    template<class T> ostream& print(const vector<T>& values) {
+        cerr << '[';
+        for (int i = 0; i < sz(values); ++i) {
+            if (i) cerr << ", ";
+            print(values[i]);
+        }
+        return cerr << ']';
+    }
+    template<class... T> void print_values(const T&... values) {
+        ((cerr << ' ', print(values)), ...);
+        cerr << nn;
+    }
+}
+#define dbg(...) (std::cerr << "[" #__VA_ARGS__ "]", debug_detail::print_values(__VA_ARGS__))
+#else
+#define dbg(...) ((void) 0)
+#endif
+
+inline int msb(ll x) { return x ? 63 - __builtin_clzll((ull) x) : -1; } // старший 1-бит (нумерация с нуля)
+inline int lsb(ll x) { return x ? __builtin_ctzll((ull) x) : -1; } // младший 1-бит (нумерация с нуля)
+
+constexpr int MOD = 1'000'000'007;
+constexpr int INF = 0x3f3f3f3f;
+constexpr ll LINF = 0x3f3f3f3f3f3f3f3fLL;
+const ld PI = acos(-1.0L);
+constexpr ld EPS = 1e-9L;
+
+template<class T, class K, class Mul> inline T binpow_apply(T& a, K& e, Mul multiply) {
+    T r = 1;
+    for (; e > 1; e >>= 1) {
+        if (e & 1) r = multiply(r, a);
+        a = multiply(a, a);
+    }
+    r = multiply(r, a);
+    return r;
+}
+template<class T, class K> inline T binpow(T a, K e) {
+    assert(e >= 0);
+    if (!(e > 0)) return 1;
+    return binpow_apply(a, e, multiplies<>{});
+}
+template<class T = remove_cv_t<decltype(MOD)>, class A, class K> inline T modpow(A a, K e, T mod = MOD) {
+    static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
+    assert(e >= 0 && mod > 0);
+    if (mod == 1 || !(e > 0)) return mod != 1;
+
+    using Common = common_type_t<A, T>;
+    using Remainder = conditional_t<is_signed_v<A> && is_unsigned_v<Common>, i128, Common>;
+    Remainder remainder = (Remainder) a % mod;
+    if (remainder < 0) remainder += mod;
+
+    T base = (T) remainder;
+    return binpow_apply(base, e, [m = (ull) mod](T x, T y) -> T {
+        if (m <= (1ULL << 32)) return (T) ((ull) x * y % m);
+        return (T) ((__uint128_t) x * y % m);
+    });
 }
 
 inline uint64_t splitmix64(uint64_t x) noexcept {
@@ -50,36 +172,23 @@ inline uint64_t splitmix64(uint64_t x) noexcept {
     return x ^ (x >> 31);
 }
 static uint64_t sm_state = (uint64_t) chrono::steady_clock::now().time_since_epoch().count() ^
-                           (uint64_t) (uintptr_t) new int;
+                           (uint64_t) (uintptr_t) &sm_state;
 inline uint64_t rnd() noexcept {
     sm_state += 0x9e3779b97f4a7c15ULL;
     return splitmix64(sm_state);
 }
 
 struct chash {
-    static inline uint64_t seed() noexcept {
+    static uint64_t seed() noexcept {
         static const uint64_t s = rnd();
         return s;
     }
-    inline size_t operator()(uint64_t x) const noexcept {
-        uint64_t sd = seed();
-        return (size_t) splitmix64(x + sd);
+    template<class T> enable_if_t<(is_integral_v<T> || is_enum_v<T>) && sizeof(T) <= sizeof(uint64_t), size_t> operator()(T x) const noexcept {
+        return (size_t) splitmix64((uint64_t) x + seed());
     }
-    inline size_t operator()(int64_t x) const noexcept {
+    size_t operator()(string_view s) const noexcept {
         uint64_t sd = seed();
-        return (size_t) splitmix64((uint64_t) x + sd);
-    }
-    inline size_t operator()(uint32_t x) const noexcept {
-        uint64_t sd = seed();
-        return (size_t) splitmix64((uint64_t) x + sd);
-    }
-    inline size_t operator()(int32_t x) const noexcept {
-        uint64_t sd = seed();
-        return (size_t) splitmix64((uint64_t) (int64_t) x + sd);
-    }
-    inline size_t operator()(string_view s) const noexcept {
-        uint64_t sd = seed();
-        const uint8_t* p = (const uint8_t*) s.data();
+        const char* p = s.data();
         size_t n = s.size();
         uint64_t h = splitmix64(sd ^ (uint64_t) n);
         while (n >= 8) {
@@ -96,117 +205,120 @@ struct chash {
         }
         return (size_t) h;
     }
-    inline size_t operator()(const string& s) const noexcept { return (*this)(string_view(s)); }
-    inline size_t operator()(const char* s) const noexcept {
-        return (*this)(string_view(s, strlen(s)));
-    }
-    template<class A, class B>
-    inline size_t operator()(const pair<A, B>& p) const noexcept {
+    template<class A, class B> size_t operator()(const pair<A, B>& p) const noexcept {
         uint64_t a = (uint64_t) (*this)(p.first);
         uint64_t b = (uint64_t) (*this)(p.second);
         return (size_t) splitmix64(a ^ (b + 0x9e3779b97f4a7c15ULL + (a << 6) + (a >> 2)));
     }
 };
 
-template<class K, class V>
-using hash_map = __gnu_pbds::gp_hash_table<K, V, chash>;
-template<class K>
-using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, chash>;
-template<class T>
-using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
-                                 __gnu_pbds::tree_order_statistics_node_update>;
+template<class K, class V> using hash_map = __gnu_pbds::gp_hash_table<K, V, chash>;
+template<class K> using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, chash>;
+template<class T> using ord_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,
+                                                __gnu_pbds::tree_order_statistics_node_update>;
 // order_of_key(x) - сколько меньше x, find_by_order(x) - итератор на элемент на позиции x (нумерация с нуля)
 
-template<typename T, T MOD>
-struct ModInt {
-    T v;
-    inline ModInt() noexcept : v(0) {}
-    template<typename U>
-    inline ModInt(U x) noexcept {
-        set(x);
+template<class Int, class Coef> inline Int extgcd_core(Int a, Int b, Coef& x, Coef& y) {
+    if (b == 0) {
+        x = a < 0 ? -1 : 1;
+        y = 0;
+        return a < 0 ? -a : a;
     }
-    template<typename U>
-    inline void set(U x) noexcept {
-        if constexpr (U(-1) < U(0)) {
-            __int128 t = (__int128) x % (__int128) MOD;
-            if (t < 0) t += MOD;
-            v = (T) t;
-        } else {
-            __uint128_t t = (__uint128_t) x % (__uint128_t) MOD;
-            v = (T) t;
-        }
+    Coef next_x;
+    Int g = extgcd_core(b, a % b, next_x, x);
+    y = next_x - (Coef) (a / b) * x;
+    return g;
+}
+
+// Возвращает НОД и коэффициенты x, y такие, что a*x + b*y = НОД(a, b).
+// НОД должен помещаться в ll.
+inline ll extgcd(ll a, ll b, ll& x, ll& y) {
+    if (a != LLONG_MIN && b != LLONG_MIN) return extgcd_core(a, b, x, y);
+    i128 wide_x, wide_y;
+    i128 g = extgcd_core((i128) a, (i128) b, wide_x, wide_y);
+    assert(g <= LLONG_MAX);
+    x = (ll) wide_x;
+    y = (ll) wide_y;
+    return (ll) g;
+}
+
+// Возвращает обратный элемент или nullopt для неположительного модуля или НОД != 1.
+template<class T> inline optional<common_type_t<ll, T>> invmod(i128 value, T mod) {
+    static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull));
+    const i128 modulus = mod;
+    if (modulus <= 0) return nullopt;
+    if (value < -modulus || value >= modulus) {
+        const bool fits_ll = modulus <= LLONG_MAX && LLONG_MIN <= value && value <= LLONG_MAX;
+        value = fits_ll ? (ll) value % (ll) modulus : value % modulus;
     }
-    inline explicit operator T() const noexcept { return v; }
-    friend inline ostream& operator<<(ostream& os, const ModInt& a) { return os << a.v; }
-    friend inline istream& operator>>(istream& is, ModInt& a) {
-        long long x;
-        is >> x;
-        a.set(x);
+    if (value < 0) value += modulus;
+    using Coef = conditional_t<(sizeof(T) < sizeof(ll) || is_signed_v<T>), ll, i128>;
+    Coef x, y;
+    if (extgcd_core((ull) mod, (ull) value, y, x) != 1) return nullopt;
+    return (common_type_t<ll, T>) (x < 0 ? x + (Coef) mod : x);
+}
+
+template<typename T, T MOD> struct ModInt {
+    static_assert(is_integral_v<T> && sizeof(T) <= sizeof(ull), "ModInt requires an integer type up to 64 bits");
+    static_assert(MOD > 0, "ModInt requires a positive modulus");
+    T v = 0; // Нормализованный остаток из [0, MOD).
+    ModInt() noexcept = default;
+    template<class U> ModInt(U x) noexcept { set(x); }
+    template<class U> void set(U x) noexcept {
+        using Word = conditional_t<(U(-1) < U(0)), ll, ull>;
+        using Wide = conditional_t<is_signed_v<Word>, i128, __uint128_t>;
+        constexpr bool fits_word = (is_integral_v<U> || is_enum_v<U>)
+            && sizeof(U) <= sizeof(Word) && MOD <= numeric_limits<Word>::max();
+        using Work = conditional_t<fits_word, Word, Wide>;
+        Work residue = (Work) x % (Work) MOD;
+        v = (T) (residue < 0 ? residue + (Work) MOD : residue);
+    }
+    explicit operator T() const noexcept { return v; }
+    friend ostream& operator<<(ostream& os, const ModInt& a) { return os << +a.v; }
+    friend istream& operator>>(istream& is, ModInt& a) {
+        using Input = conditional_t<(is_unsigned_v<T> && sizeof(T) == sizeof(ull)), i128, ll>;
+        Input x = 0;
+        if (is >> x) a.set(x);
         return is;
     }
-    inline ModInt& operator+=(const ModInt& o) noexcept {
-        v = (T) (((__int128) v + o.v) % MOD);
+    ModInt& operator+=(const ModInt& o) noexcept {
+        const T gap = MOD - o.v;
+        v = v >= gap ? v - gap : v + o.v;
         return *this;
     }
-    inline ModInt& operator-=(const ModInt& o) noexcept {
-        v = (T) (((__int128) v - o.v + MOD) % MOD);
+    ModInt& operator-=(const ModInt& o) noexcept {
+        v = v >= o.v ? v - o.v : MOD - (o.v - v);
         return *this;
     }
-    inline ModInt& operator*=(const ModInt& o) noexcept {
-        if constexpr (sizeof(T) <= 4) {
-            v = (T) (1ull * v * o.v % MOD);
-        } else {
-            v = (T) ((__int128) v * o.v % MOD);
-        }
+    ModInt& operator*=(const ModInt& o) noexcept {
+        using Product = conditional_t<(MOD <= (1LL << 32)), ull, __uint128_t>;
+        v = (T) ((Product) v * (Product) o.v % (Product) MOD);
         return *this;
     }
-    static inline ModInt pow(ModInt a, long long e) noexcept {
-        ModInt r = 1;
-        for (; e; e >>= 1, a *= a)
-            if (e & 1) r *= a;
-        return r;
+    template<class K> static ModInt pow(ModInt a, K e) noexcept { return binpow(a, e); }
+    static optional<ModInt> try_inv(ModInt a) noexcept {
+        optional<ModInt> result;
+        if (auto value = invmod(a.v, MOD)) result.emplace().v = (T) *value;
+        return result;
     }
-    static inline ModInt inv(ModInt a) noexcept { return pow(a, (long long) MOD - 2); }
-    inline ModInt& operator/=(const ModInt& o) noexcept { return *this *= inv(o); }
-    friend inline ModInt operator+(ModInt a, const ModInt& b) noexcept { return a += b; }
-    friend inline ModInt operator-(ModInt a, const ModInt& b) noexcept { return a -= b; }
-    friend inline ModInt operator*(ModInt a, const ModInt& b) noexcept { return a *= b; }
-    friend inline ModInt operator/(ModInt a, const ModInt& b) noexcept { return a /= b; }
-    friend inline bool operator==(const ModInt& a, const ModInt& b) noexcept { return a.v == b.v; }
-    friend inline bool operator!=(const ModInt& a, const ModInt& b) noexcept { return a.v != b.v; }
+    // Для inv и деления делитель должен быть обратим по модулю MOD.
+    static ModInt inv(ModInt a) noexcept {
+        auto result = try_inv(a);
+        if (!result) abort();
+        return *result;
+    }
+    ModInt& operator/=(const ModInt& o) noexcept { return *this *= inv(o); }
+    friend ModInt operator+(ModInt a, const ModInt& b) noexcept { return a += b; }
+    friend ModInt operator-(ModInt a, const ModInt& b) noexcept { return a -= b; }
+    friend ModInt operator*(ModInt a, const ModInt& b) noexcept { return a *= b; }
+    friend ModInt operator/(ModInt a, const ModInt& b) noexcept { return a /= b; }
+    friend bool operator==(const ModInt& a, const ModInt& b) noexcept { return a.v == b.v; }
+    friend bool operator!=(const ModInt& a, const ModInt& b) noexcept { return !(a == b); }
 };
 
-inline int msb(ll x) {
-    return x ? 63 - __builtin_clzll((ull) x) : -1;
-} // старший 1-бит (нумерация с нуля)
-inline int lsb(ll x) {
-    return x ? __builtin_ctzll((ull) x) : -1;
-} // младший 1-бит (нумерация с нуля)
-
-const int MOD = 1e9 + 7;
-const int INF = 0x3f3f3f3f;
-const ll LINF = 0x3f3f3f3f3f3f3f3fLL;
-const ld PI = acos(-1.0L);
-const ld EPS = 1e-9;
 using mint = ModInt<int, MOD>;
 
-template<typename T, typename K>
-inline T modpow(T a, K e) {
-    T r = 1;
-    for (; e; e >>= 1, a = (ull) a * a % MOD)
-        if (e & 1) r = (ull) r * a % MOD;
-    return r;
-}
-template<typename T, typename K>
-inline T binpow(T a, K e) {
-    T r = 1;
-    for (; e; e >>= 1, a = a * a)
-        if (e & 1) r = r * a;
-    return r;
-}
-
 void solve();
-
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);

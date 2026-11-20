@@ -123,11 +123,14 @@ ll knap_lim(const vector<int>& w, const vector<ll>& v, const vector<int>& cnt, i
 // Решает ограниченный рюкзак за O(nW) с помощью монотонных очередей.
 ll knap_lim_fast(const vector<int>& w, const vector<ll>& v, const vector<int>& cnt, int cap) {
     vector<ll> dp(cap + 1);
+    ll zero_weight_value = 0;
 
     for (int i = 0; i < sz(w); ++i) {
-        if (w[i] <= 0) {
+        if (w[i] == 0) {
+            zero_weight_value += max(0LL, v[i]) * cnt[i];
             continue;
         }
+        if (w[i] < 0 || w[i] > cap) continue;
 
         vector<ll> next = dp;
         for (int rem = 0; rem < w[i] && rem <= cap; ++rem) {
@@ -146,7 +149,7 @@ ll knap_lim_fast(const vector<int>& w, const vector<ll>& v, const vector<int>& c
         }
         dp = std::move(next);
     }
-    return dp[cap];
+    return dp[cap] + zero_weight_value;
 }
 
 // Возвращает индексы предметов, выбранных в оптимальном 0/1-рюкзаке.

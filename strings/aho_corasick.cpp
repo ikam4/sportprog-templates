@@ -101,16 +101,21 @@ public:
 
     vi ord;
     vector<Node> nodes;
+    bool built = false;
+    un_mp<int, vi> previous_ids;
 
     AhoCorasick() { clear(); }
 
     void clear() {
+        built = false;
         nodes.clear();
         ord.clear();
+        previous_ids.clear();
         nodes.eb();
     }
 
     int insert(string_view s, int idx = -1) {
+        if (built) return -1;
         assert(!s.empty());
         int u = 0;
         for (char c: s) {
@@ -121,12 +126,14 @@ public:
             }
             u = nodes[u][c];
         }
+        if (nodes[u].end_cnt > 0) previous_ids[u].pb(nodes[u].id);
         nodes[u].end_cnt++;
         nodes[u].id = idx;
         return u;
     }
 
     void build() {
+        if (built) return;
         ord.clear();
         ord.reserve(sz(nodes));
         for (int c = 0; c < alphabet; ++c) {
@@ -153,6 +160,7 @@ public:
                 }
             }
         }
+        built = true;
     }
 
     vector<pii> find_all(string_view text) const {
@@ -162,6 +170,9 @@ public:
             u = nodes[u][text[i]];
             int cur = (nodes[u].end_cnt > 0 ? u : nodes[u].exit_link);
             while (cur != 0) {
+                if (nodes[cur].end_cnt > 1) {
+                    for (int id: previous_ids.at(cur)) ans.eb(i, id);
+                }
                 ans.eb(i, nodes[cur].id);
                 cur = nodes[cur].exit_link;
             }

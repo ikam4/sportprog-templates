@@ -113,6 +113,17 @@ public:
     }
 
     int extend(char c) {
+        if (endpos_built) {
+            // У исходных состояний first_pos равен len - 1, у клонов он больше.
+            cnt[0] = 0;
+            for (int v = 1; v < sz(nodes); ++v) {
+                cnt[v] = nodes[v].first_pos == nodes[v].len - 1;
+            }
+            endpos_built = false;
+        }
+        ord.clear();
+        ways.clear();
+
         // Обобщённый суффиксный автомат (GSAM)
         // if (nodes[last][c] != -1) {
             // int q = nodes[last][c];

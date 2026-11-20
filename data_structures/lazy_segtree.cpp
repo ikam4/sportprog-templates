@@ -163,9 +163,11 @@ class min_segtree {
   vector<node> tree;
 public:
   min_segtree(int k) : n(k), tree(4 * n) {}
-  min_segtree(const vi& arr) : n(sz(arr)), tree(4 * n) { build(0, 0, n, arr); }
-  void update(int l, int r, ll val) { update(0, 0, n, l, r + 1, val); }
-  ll get(int l, int r) { return get(0, 0, n, l, r + 1); }
+  min_segtree(const vi& arr) : n(sz(arr)), tree(4 * n) {
+    if (n) build(0, 0, n, arr);
+  }
+  void update(int l, int r, ll val) { if (n) update(0, 0, n, l, r + 1, val); }
+  ll get(int l, int r) { return n ? get(0, 0, n, l, r + 1) : LLONG_MAX; }
 private:
   void build(int idx, int cl, int cr, const vi& arr) {
     if (cl + 1 == cr) {
@@ -199,7 +201,7 @@ private:
     tree[idx].val = min(tree[idx * 2 + 1].val, tree[idx * 2 + 2].val);
   }
   ll get(int idx, int cl, int cr, int l, int r) {
-    if (cr <= l || cl >= r) return LINF;
+    if (cr <= l || cl >= r) return LLONG_MAX;
     if (cl >= l && cr <= r) return tree[idx].val;
     push(idx);
     int mid = (cl + cr) / 2;

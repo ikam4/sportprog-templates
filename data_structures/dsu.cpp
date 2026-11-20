@@ -111,7 +111,7 @@ struct DSU {
 struct RollbackDSU {
     vector<int> parent, size;
     int comps;
-    vector<pair<int*, int>> history;
+    vector<int> history; // Корни, присоединённые при объединениях.
 
     RollbackDSU(int n) : parent(n), size(n, 1), comps(n) {
         iota(parent.begin(), parent.end(), 0);
@@ -134,13 +134,9 @@ struct RollbackDSU {
             swap(u, v);
         }
 
-        history.eb(&parent[v], parent[v]);
+        history.pb(v);
         parent[v] = u;
-
-        history.eb(&size[u], size[u]);
         size[u] += size[v];
-
-        history.eb(&comps, comps);
         comps--;
 
         return true;
@@ -150,7 +146,10 @@ struct RollbackDSU {
 
     void rollback(int target_state) {
         while ((int) history.size() > target_state) {
-            *history.back().first = history.back().second;
+            int v = history.back();
+            size[parent[v]] -= size[v];
+            parent[v] = v;
+            comps++;
             history.pop_back();
         }
     }
